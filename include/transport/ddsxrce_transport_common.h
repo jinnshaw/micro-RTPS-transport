@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -46,16 +47,24 @@ typedef enum Kind
 {
     LOC_NONE,
     LOC_SERIAL,
+    LOC_UDP,
 
 } locator_kind_t;
 
-typedef struct __attribute__((packed)) Locator
+typedef int16_t locator_id_t;
+
+typedef struct __attribute__((packed))
 {
+    locator_id_t id;
     locator_kind_t kind;
     octet data[16];
 } locator_t;
 
-typedef int32_t channel_id_t;
+typedef struct __attribute__((packed))
+{
+    locator_id_t id;
+    locator_kind_t kind;
+} locator_id_plus_t;
 
 /// SERIAL TRANSPORT
 
@@ -64,21 +73,47 @@ typedef int32_t channel_id_t;
 #define DFLT_POLL_MS                 20
 #define RX_BUFFER_LENGTH           1024
 #define UART_NAME_MAX_LENGTH         64
-#define MAX_NUM_SERIAL_CHANNELS       8
-
+#define MAX_NUM_CHANNELS              8
+#define MAX_NUM_LOCATORS              8
 
 typedef struct
 {
+    octet buffer[RX_BUFFER_LENGTH];
+    uint16_t buff_pos;
+} buffer_t;
+
+typedef struct
+{
+    buffer_t rx_buffer;
+
     char uart_name[UART_NAME_MAX_LENGTH];
     int uart_fd;
-    octet rx_buffer[RX_BUFFER_LENGTH];
-    uint32_t rx_buff_pos;
     uint32_t baudrate;
     uint32_t poll_ms;
-    uint8_t id;
+
+    uint8_t locator_id;
+    uint8_t idx;
     bool open;
 
 } serial_channel_t;
+
+typedef struct
+{
+    buffer_t rx_buffer;
+
+    int sender_fd;
+    int receiver_fd;
+    uint16_t udp_port_recv;
+    uint16_t udp_port_send;
+    struct sockaddr_in sender_outaddr;
+    struct sockaddr_in receiver_inaddr;
+    struct sockaddr_in receiver_outaddr;
+
+    uint8_t locator_id;
+    uint8_t idx;
+    bool open;
+
+} udp_channel_t;
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);

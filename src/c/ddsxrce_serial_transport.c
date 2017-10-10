@@ -21,36 +21,42 @@
 #include "ddsxrce_serial_transport.h"
 #include "ddsxrce_transport_common.h"
 
-static serial_channel_t* g_channels[MAX_NUM_SERIAL_CHANNELS];
-static struct pollfd g_poll_fds[MAX_NUM_SERIAL_CHANNELS] = {};
-static channel_id_t g_num_channels = 0;
+static serial_channel_t* g_channels[MAX_NUM_CHANNELS];
+static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
+static uint8_t g_num_channels = 0;
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
+int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
-serial_channel_t* get_serial_channel(const channel_id_t ch_id);
-channel_id_t create_serial(const locator_t* locator);
-int destroy_serial(const channel_id_t channel_id);
-int open_serial(const channel_id_t channel_id);
-int close_serial(const channel_id_t channel_id);
-int read_serial(void *buffer, const size_t len, const serial_channel_t* channel);
-int receive_serial(octet* out_buffer, const size_t buffer_len, const channel_id_t channel_id);
-int write_serial(const void* buffer, const size_t len, const serial_channel_t* channel);
-int send_serial(const octet* in_buffer, const size_t length, const channel_id_t channel_id);
+locator_id_t create_serial (const char* device, locator_id_t locator_id);
+int          destroy_serial(const locator_id_t locator_id);
+int          open_serial   (serial_channel_t* channel);
+int          close_serial  (serial_channel_t* channel);
+int          send_serial   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
-serial_channel_t* get_serial_channel(const channel_id_t ch_id)
+serial_channel_t* get_serial_channel(const locator_id_t locator_id);
+int read_serial(void *buffer, const size_t len, serial_channel_t* channel);
+int write_serial(const void* buffer, const size_t len, serial_channel_t* channel);
+
+serial_channel_t* get_serial_channel(const locator_id_t locator_id)
 {
-    if (0 > ch_id || MAX_NUM_SERIAL_CHANNELS <= ch_id)
+    serial_channel_t* ret = NULL;
+    for (int i = 0; i < g_num_channels; ++i)
     {
-        return NULL;
+        if (NULL != g_channels[i] &&
+            g_channels[i]->locator_id == locator_id)
+        {
+            ret = g_channels[i];
+            break;
+        }
     }
-
-    return g_channels[ch_id];
+    return ret;
 }
-
-channel_id_t create_serial(const locator_t* locator)
+locator_id_t create_serial(const char* device, locator_id_t loc_id)
 {
-    if (NULL == locator || MAX_NUM_SERIAL_CHANNELS <= g_num_channels)
+    if (NULL == device || MAX_NUM_CHANNELS <= g_num_channels)
     {
         return TRANSPORT_ERROR;
     }
@@ -61,30 +67,32 @@ channel_id_t create_serial(const locator_t* locator)
         return TRANSPORT_ERROR;
     }
 
-    memcpy(channel->uart_name, locator->data, sizeof(locator->data));
+    memset(channel->rx_buffer.buffer, 0, RX_BUFFER_LENGTH);
+    channel->rx_buffer.buff_pos = 0;
+    memcpy(channel->uart_name, device, UART_NAME_MAX_LENGTH);
     channel->uart_fd = -1;
-    memset(channel->rx_buffer, 0, RX_BUFFER_LENGTH);
-    channel->rx_buff_pos = 0;
     channel->baudrate = DFLT_BAUDRATE;
     channel->poll_ms = DFLT_POLL_MS;
+    channel->open = false;
 
-    for (int i = 0; i < MAX_NUM_SERIAL_CHANNELS; ++i)
+    for (int i = 0; i < MAX_NUM_CHANNELS; ++i)
     {
         if (NULL == g_channels[i])
         {
-            channel->id = i;
+            channel->locator_id = loc_id;
+            channel->idx = i;
             g_channels[i] = channel;
-            g_num_channels++;
+            ++g_num_channels;
             break;
         }
     }
 
-    return channel->id;
+    return channel->locator_id;
 }
 
-int destroy_serial(const channel_id_t channel_id)
+int destroy_serial(const locator_id_t loc_id)
 {
-    serial_channel_t* channel = get_serial_channel(channel_id);
+    serial_channel_t* channel = get_serial_channel(loc_id);
     if (NULL == channel)
     {
         return TRANSPORT_ERROR;
@@ -92,17 +100,16 @@ int destroy_serial(const channel_id_t channel_id)
 
     if (channel->open)
     {
-        close_serial(channel_id);
+        close_serial(channel);
     }
-
+    g_channels[channel->idx] = NULL;
     free(channel);
 
     return TRANSPORT_OK;
 }
 
-int open_serial(const channel_id_t channel_id)
+int open_serial(serial_channel_t* channel)
 {
-    serial_channel_t* channel = get_serial_channel(channel_id);
     if (NULL == channel)
     {
         return TRANSPORT_ERROR;
@@ -125,7 +132,7 @@ int open_serial(const channel_id_t channel_id)
     {
         int errno_bkp = errno;
         printf("ERR GET CONF %s: %d (%d)\n", channel->uart_name, termios_state, errno);
-        close_serial(channel_id);
+        close_serial(channel);
         return -errno_bkp;
     }
 
@@ -140,7 +147,7 @@ int open_serial(const channel_id_t channel_id)
         {
             int errno_bkp = errno;
             printf("ERR SET BAUD %s: %d (%d)\n", channel->uart_name, termios_state, errno);
-            close_serial(channel_id);
+            close_serial(channel);
             return -errno_bkp;
         }
     }
@@ -149,7 +156,7 @@ int open_serial(const channel_id_t channel_id)
     {
         int errno_bkp = errno;
         printf("ERR SET CONF %s (%d)\n", channel->uart_name, errno);
-        close_serial(channel_id);
+        close_serial(channel);
         return -errno_bkp;
     }
 
@@ -157,7 +164,7 @@ int open_serial(const channel_id_t channel_id)
     bool flush = false;
     while (0 < read(channel->uart_fd, (void *)&aux, 64))
     {
-        printf("%s", aux);
+        //printf("%s", aux);
         flush = true;
         usleep(1000);
     }
@@ -172,15 +179,14 @@ int open_serial(const channel_id_t channel_id)
     }
 
     channel->open = true;
-    g_poll_fds[channel->id].fd = channel->uart_fd;
-    g_poll_fds[channel->id].events = POLLIN;
+    g_poll_fds[channel->idx].fd = channel->uart_fd;
+    g_poll_fds[channel->idx].events = POLLIN;
 
     return channel->uart_fd;
 }
 
-int close_serial(const channel_id_t channel_id)
+int close_serial(serial_channel_t* channel)
 {
-    serial_channel_t* channel = get_serial_channel(channel_id);
     if (NULL == channel || 0 > channel->uart_fd)
     {
         return TRANSPORT_ERROR;
@@ -190,17 +196,17 @@ int close_serial(const channel_id_t channel_id)
     close(channel->uart_fd);
     channel->uart_fd = -1;
     channel->open = false;
-    memset(&g_poll_fds[channel->id], 0, sizeof(struct pollfd));
+    memset(&g_poll_fds[channel->idx], 0, sizeof(struct pollfd));
 
     return 0;
 }
 
-int read_serial(void *buffer, const size_t len, const serial_channel_t* channel)
+int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
 {
     if (NULL == buffer       ||
         NULL == channel      ||
         0 > channel->uart_fd ||
-        (!channel->open && 0 > open_serial(channel->id)))
+        (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
     }
@@ -208,7 +214,7 @@ int read_serial(void *buffer, const size_t len, const serial_channel_t* channel)
     // TODO: for several channels this can be optimized
     int ret = 0;
     int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
-    if (r > 0 && (g_poll_fds[channel->id].revents & POLLIN))
+    if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
     {
         ret = read(channel->uart_fd, buffer, len);
     }
@@ -217,22 +223,23 @@ int read_serial(void *buffer, const size_t len, const serial_channel_t* channel)
 }
 
 
-int receive_serial(octet* out_buffer, const size_t buffer_len, const channel_id_t channel_id)
+int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
 {
     if (NULL == out_buffer)
     {
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* ch = get_serial_channel(channel_id);
-    if (NULL == ch      ||
-        0 > ch->uart_fd ||
-        (!ch->open && 0 > open_serial(ch->id)))
+    serial_channel_t* channel = get_serial_channel(loc_id);
+    if (NULL == channel      ||
+        0 > channel->uart_fd ||
+        (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
     }
 
-    int len = read_serial((void *) (ch->rx_buffer + ch->rx_buff_pos), sizeof(ch->rx_buffer) - ch->rx_buff_pos, ch);
+    int len = read_serial((void *) (channel->rx_buffer.buffer + channel->rx_buffer.buff_pos),
+                           sizeof(channel->rx_buffer.buffer) - channel->rx_buffer.buff_pos, channel);
     if (len <= 0)
     {
         int errsv = errno;
@@ -245,94 +252,17 @@ int receive_serial(octet* out_buffer, const size_t buffer_len, const channel_id_
         return len;
     }
 
-    ch->rx_buff_pos += len;
-
-    // We read some
-    size_t header_size = sizeof(header_t);
-
-    // but not enough
-    if (ch->rx_buff_pos < header_size)
-    {
-        return 0;
-    }
-
-    uint32_t msg_start_pos = 0;
-
-    for (msg_start_pos = 0; msg_start_pos <= ch->rx_buff_pos - header_size; ++msg_start_pos)
-    {
-        if ('>' == ch->rx_buffer[msg_start_pos] && memcmp(ch->rx_buffer + msg_start_pos, ">>>", 3) == 0)
-        {
-            break;
-        }
-    }
-
-    // Start not found
-    if (msg_start_pos > ch->rx_buff_pos - header_size)
-    {
-        printf("                                 (↓↓ %u)\n", msg_start_pos);
-        // All we've checked so far is garbage, drop it - but save unchecked bytes
-        memmove(ch->rx_buffer, ch->rx_buffer + msg_start_pos, ch->rx_buff_pos - msg_start_pos);
-        ch->rx_buff_pos = ch->rx_buff_pos - msg_start_pos;
-        return -1;
-    }
-
-    /*
-     * [>,>,>,length_H,length_L,CRC_H,CRC_L,payloadStart, ... ,payloadEnd]
-     */
-
-    header_t* header = (header_t*) &ch->rx_buffer[msg_start_pos];
-    uint32_t payload_len = ((uint32_t) header->payload_len_h << 8) | header->payload_len_l;
-
-    // The message won't fit the buffer.
-    if (buffer_len < header_size + payload_len)
-    {
-        return -EMSGSIZE;
-    }
-
-    // We do not have a complete message yet
-    if (msg_start_pos + header_size + payload_len > ch->rx_buff_pos)
-    {
-        // If there's garbage at the beginning, drop it
-        if (msg_start_pos > 0)
-        {
-            printf("                                 (↓ %u)\n", msg_start_pos);
-            memmove(ch->rx_buffer, ch->rx_buffer + msg_start_pos, ch->rx_buff_pos - msg_start_pos);
-            ch->rx_buff_pos -= msg_start_pos;
-        }
-
-        return 0;
-    }
-
-    uint16_t read_crc = ((uint16_t) header->crc_h << 8) | header->crc_l;
-    uint16_t calc_crc = crc16((uint8_t *) ch->rx_buffer + msg_start_pos + header_size, payload_len);
-
-    if (read_crc != calc_crc)
-    {
-        printf("BAD CRC %u != %u\n", read_crc, calc_crc);
-        printf("                                 (↓ %lu)\n", (unsigned long) (header_size + payload_len));
-        len = -1;
-
-    }
-    else
-    {
-        // copy message to outbuffer and set other return values
-        memmove(out_buffer, ch->rx_buffer + msg_start_pos + header_size, payload_len);
-        len = payload_len; // only payload, "+ header_size" for real size.
-    }
-
-    // discard message from rx_buffer
-    ch->rx_buff_pos -= header_size + payload_len;
-    memmove(ch->rx_buffer, ch->rx_buffer + msg_start_pos + header_size + payload_len, ch->rx_buff_pos);
-
-    return len;
+    // We read some bytes, trying extract a whole message
+    channel->rx_buffer.buff_pos += len;
+    return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
 }
 
-int write_serial(const void* buffer, const size_t len, const serial_channel_t* channel)
+int write_serial(const void* buffer, const size_t len, serial_channel_t* channel)
 {
     if (NULL == buffer       ||
         NULL == channel      ||
         0 > channel->uart_fd ||
-        (!channel->open && 0 > open_serial(channel->id)))
+        (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
     }
@@ -340,45 +270,28 @@ int write_serial(const void* buffer, const size_t len, const serial_channel_t* c
     return write(channel->uart_fd, buffer, len);
 }
 
-int send_serial(const octet* in_buffer, const size_t length, const channel_id_t channel_id)
+int send_serial(const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t loc_id)
 {
     if (NULL == in_buffer)
     {
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* ch = get_serial_channel(channel_id);
-    if (NULL == ch      ||
-        0 > ch->uart_fd ||
-        (!ch->open && 0 > open_serial(ch->id)))
+    serial_channel_t* channel = get_serial_channel(loc_id);
+    if (NULL == channel      ||
+        0 > channel->uart_fd ||
+        (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
     }
 
-    static struct Header header = {
-        .marker = {'>', '>', '>'},
-        .payload_len_h = 0u,
-        .payload_len_l = 0u,
-        .crc_h = 0u,
-        .crc_l = 0u
-
-    };
-
-    // [>,>,>,topic_ID,seq,payload_length,CRCHigh,CRCLow,payload_start, ... ,payload_end]
-
-    uint16_t crc = crc16(in_buffer, length);
-    header.payload_len_h = (length >> 8) & 0xff;
-    header.payload_len_l = length & 0xff;
-    header.crc_h = (crc >> 8) & 0xff;
-    header.crc_l = crc & 0xff;
-
-    int len = write_serial(&header, sizeof(header), ch);
-    if (len != sizeof(header))
+    int len = write_serial(header, sizeof(header_t), channel);
+    if (len != sizeof(header_t))
     {
         return len;
     }
 
-    len = write_serial(in_buffer, length, ch);
+    len = write_serial(in_buffer, length, channel);
     if (len != length)
     {
         return len;

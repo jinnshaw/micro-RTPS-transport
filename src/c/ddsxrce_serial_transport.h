@@ -22,12 +22,14 @@ extern "C"
 {
 #endif
 
-channel_id_t create_serial(const locator_t* locator);
-int destroy_serial(const channel_id_t channel_id);
-int open_serial(const channel_id_t channel_id);
-int close_serial(const channel_id_t channel_id);
-int send_serial(const octet* in_buffer, const size_t length, const channel_id_t channel_id);
-int receive_serial(octet* out_buffer, const size_t buffer_len, const channel_id_t channel_id);
+locator_id_t create_serial (const char* device, locator_id_t locator_id);
+int          destroy_serial(const locator_id_t locator_id);
+int          open_serial   (serial_channel_t* channel);
+int          close_serial  (serial_channel_t* channel);
+int          send_serial   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+
+serial_channel_t* get_serial_channel(const locator_id_t locator_id);
 
 #ifdef __cplusplus
 }

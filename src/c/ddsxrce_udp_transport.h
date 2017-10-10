@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _DDSXRCE_TRANSPORT_H_
-#define _DDSXRCE_TRANSPORT_H_
+#ifndef _DDSXRCE_UDP_TRANSPORT_H_
+#define _DDSXRCE_UDP_TRANSPORT_H_
 
 #include "ddsxrce_transport_common.h"
 
@@ -22,13 +22,14 @@ extern "C"
 {
 #endif
 
-locator_id_t add_serial_locator(const char* device);
-locator_id_t add_udp_locator(const uint16_t udp_port_recv, const uint16_t udp_port_send);
+locator_id_t create_udp (uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
+int          destroy_udp(const locator_id_t locator_id);
+int          open_udp   (udp_channel_t* channel);
+int          close_udp  (udp_channel_t* channel);
+int          send_udp   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
-int rm_locator(const locator_id_t locator_id);
-
-int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
-int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+udp_channel_t* get_udp_channel(const locator_id_t locator_id);
 
 #ifdef __cplusplus
 }
