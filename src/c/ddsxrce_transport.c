@@ -41,6 +41,7 @@ locator_id_t add_serial_locator(const char* device)
 {
     if (NULL ==  device)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
@@ -106,6 +107,7 @@ int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_
 {
     if (NULL == in_buffer)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
@@ -139,6 +141,7 @@ int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t 
 {
     if (NULL == out_buffer)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
@@ -154,6 +157,7 @@ int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* intern
 {
     if (NULL == out_buffer || NULL == internal_buffer)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 

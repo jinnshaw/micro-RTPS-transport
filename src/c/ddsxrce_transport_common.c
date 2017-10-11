@@ -20,6 +20,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+#include "ddsxrce_transport_common.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -28,6 +31,7 @@ extern "C"
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
+void print_buffer(const uint8_t* buffer, const size_t len);
 
 /** CRC table for the CRC-16. The poly is 0x8005 (x^16 + x^15 + x^2 + 1) */
 static uint16_t const crc16_table[256] = {
@@ -80,6 +84,16 @@ uint16_t crc16(uint8_t const *buffer, size_t len)
     }
 
     return crc;
+}
+
+void print_buffer(const uint8_t* buffer, const size_t len)
+{
+    printf("=> ");
+    for (size_t i = 0; i < len; ++i)
+    {
+        printf("%c[0x%02X]", ((char*)buffer)[i], ((char*)buffer)[i]);
+    }
+    printf("\n");
 }
 
 #ifdef __cplusplus

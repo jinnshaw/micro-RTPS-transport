@@ -57,6 +57,7 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
 {
     if (0 > loc_id)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
@@ -86,6 +87,7 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
         }
     }
 
+    printf("> Create udp channel id: %d\n", channel->locator_id);
     return channel->locator_id;
 }
 
@@ -93,6 +95,7 @@ int init_receiver(udp_channel_t* channel)
 {
     if (NULL == channel)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
@@ -104,20 +107,17 @@ int init_receiver(udp_channel_t* channel)
 
     if (0 > (channel->receiver_fd = socket(AF_INET, SOCK_DGRAM, 0)))
     {
-        printf("create socket failed\n");
+        printf("# create socket failed\n");
         return TRANSPORT_ERROR;
     }
-
-    printf("Trying to connect...\n");
 
     if (0 > bind(channel->receiver_fd, (struct sockaddr *)&channel->receiver_inaddr, sizeof(channel->receiver_inaddr)))
     {
-        printf("bind failed\n");
+        printf("# bind failed\n");
         return TRANSPORT_ERROR;
     }
 
-    printf("connected to server!\n");
-
+    printf("> Receiver initialized on port %d\n", channel->udp_port_recv);
     return TRANSPORT_OK;
 }
 
@@ -125,12 +125,13 @@ int init_sender(udp_channel_t* channel)
 {
     if (NULL == channel)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
     if (0 > (channel->sender_fd = socket(AF_INET, SOCK_DGRAM, 0)))
     {
-        printf("create socket failed\n");
+        printf("> create socket failed\n");
         return TRANSPORT_ERROR;
     }
 
@@ -140,10 +141,11 @@ int init_sender(udp_channel_t* channel)
 
     if (0 == inet_aton("127.0.0.1", &channel->sender_outaddr.sin_addr))
     {
-        printf("inet_aton() failed\n");
+        printf("# inet_aton() failed\n");
         return TRANSPORT_ERROR;
     }
 
+    printf("> Sender initialized on port %d\n", channel->udp_port_send);
     return TRANSPORT_OK;
 }
 
@@ -171,9 +173,11 @@ int open_udp(udp_channel_t* channel)
         0 > init_receiver(channel) ||
         0 > init_sender(channel))
     {
+        printf("# ERROR OPENIG UDP CHANNEL\n");
         return TRANSPORT_ERROR;
     }
 
+    printf("> UDP channel opened\n");
     channel->open = true;
     return TRANSPORT_OK;
 }
@@ -182,12 +186,13 @@ int close_udp(udp_channel_t* channel)
 {
     if (NULL == channel)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
     if (0 <= channel->sender_fd)
     {
-        printf("Close sender socket\n");
+        printf("> Close sender socket\n");
         shutdown(channel->sender_fd, SHUT_RDWR);
         close(channel->sender_fd);
         channel->sender_fd = -1;
@@ -195,7 +200,7 @@ int close_udp(udp_channel_t* channel)
 
     if (0 <= channel->receiver_fd)
     {
-        printf("Close receiver socket\n");
+        printf("> Close receiver socket\n");
         shutdown(channel->receiver_fd, SHUT_RDWR);
         close(channel->receiver_fd);
         channel->receiver_fd = -1;
@@ -209,9 +214,9 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
 {
     if (NULL == buffer       ||
         NULL == channel      ||
-        0 > channel->receiver_fd ||
         (!channel->open && 0 > open_udp(channel)))
     {
+        printf("# Error read UDP channel\n");
         return TRANSPORT_ERROR;
     }
 
@@ -221,8 +226,6 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
     static socklen_t addrlen = sizeof(channel->receiver_outaddr);
     ret = recvfrom(channel->receiver_fd, buffer, len, 0, (struct sockaddr *) &channel->receiver_outaddr, &addrlen);
     return ret;
-
-    return ret;
 }
 
 
@@ -230,28 +233,29 @@ int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t l
 {
     if (NULL == out_buffer)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = get_udp_channel(loc_id);
-    if (NULL == channel      ||
-        0 > channel->receiver_fd ||
+    if (NULL == channel ||
         (!channel->open && 0 > open_udp(channel)))
     {
+        printf("# Error recv UDP channel\n");
         return TRANSPORT_ERROR;
     }
 
     octet* rx_buffer = channel->rx_buffer.buffer;
     uint16_t* rx_buff_pos = &(channel->rx_buffer.buff_pos);
 
-    int len = read_udp((void *) (rx_buffer + (*rx_buff_pos)), sizeof(rx_buffer) - (*rx_buff_pos), channel);
+    int len = read_udp((void *) (rx_buffer + (*rx_buff_pos)), sizeof(channel->rx_buffer.buffer) - (*rx_buff_pos), channel);
     if (len <= 0)
     {
         int errsv = errno;
 
         if (errsv && EAGAIN != errsv && ETIMEDOUT != errsv)
         {
-            printf("Read fail %d\n", errsv);
+            printf("# Read fail %d\n", errsv);
         }
 
         return len;
@@ -266,9 +270,9 @@ int write_udp(const void* buffer, const size_t len, udp_channel_t* channel)
 {
     if (NULL == buffer       ||
         NULL == channel      ||
-        0 > channel->sender_fd ||
         (!channel->open && 0 > open_udp(channel)))
     {
+        printf("# Error write UDP channel\n");
         return TRANSPORT_ERROR;
     }
 
@@ -281,14 +285,15 @@ int send_udp(const header_t* header, const octet* in_buffer, const size_t length
 {
     if (NULL == in_buffer)
     {
+        printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = get_udp_channel(loc_id);
     if (NULL == channel      ||
-        0 > channel->sender_fd ||
         (!channel->open && 0 > open_udp(channel)))
     {
+        printf("# Error send UDP channel\n");
         return TRANSPORT_ERROR;
     }
 

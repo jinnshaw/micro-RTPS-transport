@@ -1,3 +1,5 @@
+################################################################################
+#
 # Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+################################################################################
 
 ###############################################################################
 # CMake build rules for micro RTPS transport
@@ -36,3 +40,11 @@ target_include_directories(
 )
 
 install(TARGETS transport DESTINATION lib/)
+
+###############################################################################
+# Testing
+###############################################################################
+option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
+if(EPROSIMA_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
