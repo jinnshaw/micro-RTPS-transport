@@ -87,7 +87,9 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
         }
     }
 
+    #ifdef TRANSPORT_LOGS
     printf("> Create udp channel id: %d\n", channel->locator_id);
+    #endif
     return channel->locator_id;
 }
 
@@ -117,7 +119,9 @@ int init_receiver(udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
+    #ifdef TRANSPORT_LOGS
     printf("> Receiver initialized on port %d\n", channel->udp_port_recv);
+    #endif
     return TRANSPORT_OK;
 }
 
@@ -145,7 +149,9 @@ int init_sender(udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
+    #ifdef TRANSPORT_LOGS
     printf("> Sender initialized on port %d\n", channel->udp_port_send);
+    #endif
     return TRANSPORT_OK;
 }
 
@@ -177,7 +183,9 @@ int open_udp(udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
+    #ifdef TRANSPORT_LOGS
     printf("> UDP channel opened\n");
+    #endif
     channel->open = true;
     return TRANSPORT_OK;
 }
@@ -192,7 +200,9 @@ int close_udp(udp_channel_t* channel)
 
     if (0 <= channel->sender_fd)
     {
+        #ifdef TRANSPORT_LOGS
         printf("> Close sender socket\n");
+        #endif
         shutdown(channel->sender_fd, SHUT_RDWR);
         close(channel->sender_fd);
         channel->sender_fd = -1;
@@ -200,7 +210,9 @@ int close_udp(udp_channel_t* channel)
 
     if (0 <= channel->receiver_fd)
     {
+        #ifdef TRANSPORT_LOGS
         printf("> Close receiver socket\n");
+        #endif
         shutdown(channel->receiver_fd, SHUT_RDWR);
         close(channel->receiver_fd);
         channel->receiver_fd = -1;

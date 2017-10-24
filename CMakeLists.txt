@@ -27,6 +27,8 @@ endif()
 
 project(transport C)
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
+
 file(GLOB TRANSPORT_LIB_SOURCES
     src/c/*.c
 )
