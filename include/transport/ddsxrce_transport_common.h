@@ -109,6 +109,8 @@ typedef struct
     struct sockaddr_in receiver_inaddr;
     struct sockaddr_in receiver_outaddr;
 
+    uint32_t poll_ms;
+
     uint8_t locator_id;
     uint8_t idx;
     bool open;

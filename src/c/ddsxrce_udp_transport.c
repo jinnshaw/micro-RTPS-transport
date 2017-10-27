@@ -22,6 +22,7 @@
 #include "ddsxrce_transport_common.h"
 
 static udp_channel_t* g_channels[MAX_NUM_CHANNELS];
+static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 static uint8_t g_num_channels = 0;
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
@@ -73,6 +74,7 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
     channel->receiver_fd = -1;
     channel->udp_port_recv = udp_port_recv;
     channel->udp_port_send = udp_port_send;
+    channel->poll_ms = DFLT_POLL_MS;
     channel->open = false;
 
     for (int i = 0; i < MAX_NUM_CHANNELS; ++i)
@@ -187,6 +189,8 @@ int open_udp(udp_channel_t* channel)
     printf("> UDP channel opened\n");
     #endif
     channel->open = true;
+    g_poll_fds[channel->idx].fd = channel->receiver_fd;
+    g_poll_fds[channel->idx].events = POLLIN;
     return TRANSPORT_OK;
 }
 
@@ -219,6 +223,7 @@ int close_udp(udp_channel_t* channel)
     }
 
     channel->open = false;
+    memset(&g_poll_fds[channel->idx], 0, sizeof(struct pollfd));
     return TRANSPORT_OK;
 }
 
@@ -234,9 +239,13 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
 
     // TODO: for several channels this can be optimized
     int ret = 0;
-    // Blocking call
     static socklen_t addrlen = sizeof(channel->receiver_outaddr);
-    ret = recvfrom(channel->receiver_fd, buffer, len, 0, (struct sockaddr *) &channel->receiver_outaddr, &addrlen);
+    int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
+    if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
+    {
+        ret = recvfrom(channel->receiver_fd, buffer, len, 0, (struct sockaddr *) &channel->receiver_outaddr, &addrlen);
+    }
+
     return ret;
 }
 
