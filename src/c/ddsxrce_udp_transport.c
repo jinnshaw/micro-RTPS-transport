@@ -42,6 +42,7 @@ int write_udp(const void* buffer, const size_t len, udp_channel_t* channel);
 
 udp_channel_t* get_udp_channel(const locator_id_t locator_id)
 {
+#ifndef __PX4_NUTTX
     udp_channel_t* ret = NULL;
     for (int i = 0; i < g_num_channels; ++i)
     {
@@ -53,9 +54,14 @@ udp_channel_t* get_udp_channel(const locator_id_t locator_id)
         }
     }
     return ret;
+#endif /* __PX4_NUTTX */
+
+    return NULL;
 }
+
 locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t loc_id)
 {
+#ifndef __PX4_NUTTX
     if (0 > loc_id)
     {
         printf("# BAD PARAMETERS!\n");
@@ -93,10 +99,14 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
     printf("> Create udp channel id: %d\n", channel->locator_id);
     #endif
     return channel->locator_id;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int init_receiver(udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == channel)
     {
         printf("# BAD PARAMETERS!\n");
@@ -125,10 +135,14 @@ int init_receiver(udp_channel_t* channel)
     printf("> Receiver initialized on port %d\n", channel->udp_port_recv);
     #endif
     return TRANSPORT_OK;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int init_sender(udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == channel)
     {
         printf("# BAD PARAMETERS!\n");
@@ -155,10 +169,14 @@ int init_sender(udp_channel_t* channel)
     printf("> Sender initialized on port %d\n", channel->udp_port_send);
     #endif
     return TRANSPORT_OK;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int destroy_udp(const locator_id_t loc_id)
 {
+#ifndef __PX4_NUTTX
     udp_channel_t* channel = get_udp_channel(loc_id);
     if (NULL == channel)
     {
@@ -173,10 +191,14 @@ int destroy_udp(const locator_id_t loc_id)
     free(channel);
 
     return TRANSPORT_OK;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int open_udp(udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == channel ||
         0 > init_receiver(channel) ||
         0 > init_sender(channel))
@@ -192,10 +214,14 @@ int open_udp(udp_channel_t* channel)
     g_poll_fds[channel->idx].fd = channel->receiver_fd;
     g_poll_fds[channel->idx].events = POLLIN;
     return TRANSPORT_OK;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int close_udp(udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == channel)
     {
         printf("# BAD PARAMETERS!\n");
@@ -225,10 +251,14 @@ int close_udp(udp_channel_t* channel)
     channel->open = false;
     memset(&g_poll_fds[channel->idx], 0, sizeof(struct pollfd));
     return TRANSPORT_OK;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == buffer       ||
         NULL == channel      ||
         (!channel->open && 0 > open_udp(channel)))
@@ -247,11 +277,15 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
     }
 
     return ret;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 
 int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
 {
+#ifndef __PX4_NUTTX
     if (NULL == out_buffer)
     {
         printf("# BAD PARAMETERS!\n");
@@ -285,10 +319,14 @@ int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t l
     // We read some bytes, trying extract a whole message
     (*rx_buff_pos) += len;
     return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int write_udp(const void* buffer, const size_t len, udp_channel_t* channel)
 {
+#ifndef __PX4_NUTTX
     if (NULL == buffer       ||
         NULL == channel      ||
         (!channel->open && 0 > open_udp(channel)))
@@ -300,10 +338,14 @@ int write_udp(const void* buffer, const size_t len, udp_channel_t* channel)
     int ret = 0;
     ret = sendto(channel->sender_fd, buffer, len, 0, (struct sockaddr *)&channel->sender_outaddr, sizeof(channel->sender_outaddr));
     return ret;
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
 
 int send_udp(const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t loc_id)
 {
+#ifndef __PX4_NUTTX
     if (NULL == in_buffer)
     {
         printf("# BAD PARAMETERS!\n");
@@ -331,4 +373,7 @@ int send_udp(const header_t* header, const octet* in_buffer, const size_t length
     }
 
     return len; // only payload, + sizeof(header); for real size.
+#endif /* __PX4_NUTTX */
+
+    return TRANSPORT_ERROR;
 }
