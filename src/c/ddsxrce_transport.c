@@ -24,6 +24,9 @@
 static locator_id_t g_loc_counter = 0;
 static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];
 
+locator_kind_t get_kind(const locator_id_t locator_id);
+int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+
 
 locator_kind_t get_kind(const locator_id_t locator_id)
 {

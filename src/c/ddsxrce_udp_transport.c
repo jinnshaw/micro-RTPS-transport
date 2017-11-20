@@ -21,13 +21,17 @@
 #include "ddsxrce_udp_transport.h"
 #include "ddsxrce_transport_common.h"
 
+#ifndef __PX4_NUTTX
 static udp_channel_t* g_channels[MAX_NUM_CHANNELS];
 static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 static uint8_t g_num_channels = 0;
+#endif
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
 int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int init_receiver(udp_channel_t* channel);
+int init_sender(udp_channel_t* channel);
 
 locator_id_t create_udp (uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
 int          destroy_udp(const locator_id_t locator_id);

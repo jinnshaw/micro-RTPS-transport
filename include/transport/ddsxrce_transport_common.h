@@ -20,7 +20,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
+
+#ifndef __PX4_NUTTX
+    #include <arpa/inet.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -105,9 +108,11 @@ typedef struct
     int receiver_fd;
     uint16_t udp_port_recv;
     uint16_t udp_port_send;
+#ifndef __PX4_NUTTX
     struct sockaddr_in sender_outaddr;
     struct sockaddr_in receiver_inaddr;
     struct sockaddr_in receiver_outaddr;
+#endif
 
     uint32_t poll_ms;
 
