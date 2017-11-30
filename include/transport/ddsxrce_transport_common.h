@@ -76,8 +76,10 @@ typedef struct __attribute__((packed))
 #define DFLT_POLL_MS                 20
 #define RX_BUFFER_LENGTH           1024
 #define UART_NAME_MAX_LENGTH         64
+#define IP_MAX_LENGTH                16
 #define MAX_NUM_CHANNELS              8
 #define MAX_NUM_LOCATORS              8
+#define MAX_PENDING_CONNECTIONS      10
 
 typedef struct
 {
@@ -114,6 +116,7 @@ typedef struct
     struct sockaddr_in receiver_outaddr;
 #endif
 
+    char server_ip[IP_MAX_LENGTH];
     uint32_t poll_ms;
 
     uint8_t locator_id;

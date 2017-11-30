@@ -33,7 +33,7 @@ int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* intern
 int init_receiver(udp_channel_t* channel);
 int init_sender(udp_channel_t* channel);
 
-locator_id_t create_udp (uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
+locator_id_t create_udp (const char* server_ip, uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
 int          destroy_udp(const locator_id_t locator_id);
 int          open_udp   (udp_channel_t* channel);
 int          close_udp  (udp_channel_t* channel);
@@ -63,10 +63,10 @@ udp_channel_t* get_udp_channel(const locator_id_t locator_id)
     return NULL;
 }
 
-locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t loc_id)
+locator_id_t create_udp(const char* server_ip, uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t loc_id)
 {
 #ifndef __PX4_NUTTX
-    if (0 > loc_id)
+    if (NULL == server_ip || 0 > loc_id)
     {
         printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
@@ -86,6 +86,7 @@ locator_id_t create_udp(uint16_t udp_port_recv, uint16_t udp_port_send, locator_
     channel->udp_port_send = udp_port_send;
     channel->poll_ms = DFLT_POLL_MS;
     channel->open = false;
+    strncpy(channel->server_ip, server_ip, strlen(server_ip) + 1);
 
     for (int i = 0; i < MAX_NUM_CHANNELS; ++i)
     {
@@ -123,7 +124,7 @@ int init_receiver(udp_channel_t* channel)
     channel->receiver_inaddr.sin_port = htons(channel->udp_port_recv);
     channel->receiver_inaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (0 > (channel->receiver_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+    if (0 > (channel->receiver_fd = socket(AF_INET, SOCK_STREAM, 0)))
     {
         printf("# create socket failed\n");
         return TRANSPORT_ERROR;
@@ -132,6 +133,12 @@ int init_receiver(udp_channel_t* channel)
     if (0 > bind(channel->receiver_fd, (struct sockaddr *)&channel->receiver_inaddr, sizeof(channel->receiver_inaddr)))
     {
         printf("# bind failed\n");
+        return TRANSPORT_ERROR;
+    }
+
+    if (0 > listen(channel->receiver_fd, MAX_PENDING_CONNECTIONS))
+    {
+        printf("# listen failed\n");
         return TRANSPORT_ERROR;
     }
 
@@ -153,7 +160,7 @@ int init_sender(udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
-    if (0 > (channel->sender_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+    if (0 > (channel->sender_fd = socket(AF_INET, SOCK_STREAM, 0)))
     {
         printf("> create socket failed\n");
         return TRANSPORT_ERROR;
@@ -162,11 +169,16 @@ int init_sender(udp_channel_t* channel)
     memset((char *) &channel->sender_outaddr, 0, sizeof(channel->sender_outaddr));
     channel->sender_outaddr.sin_family = AF_INET;
     channel->sender_outaddr.sin_port = htons(channel->udp_port_send);
-
-    if (0 == inet_aton("127.0.0.1", &channel->sender_outaddr.sin_addr))
+    if (0 >= inet_pton(AF_INET, channel->server_ip, &channel->sender_outaddr.sin_addr))
     {
         printf("# inet_aton() failed\n");
         return TRANSPORT_ERROR;
+    }
+
+    if(0 > connect(channel->sender_fd, (struct sockaddr *)&channel->sender_outaddr, sizeof(channel->sender_outaddr)))
+    {
+       printf("\n Error : Connect Failed \n");
+       return 1;
     }
 
     #ifdef TRANSPORT_LOGS

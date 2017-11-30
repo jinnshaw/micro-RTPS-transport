@@ -22,7 +22,7 @@ extern "C"
 {
 #endif
 
-locator_id_t create_udp (uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
+locator_id_t create_udp (const char* server_ip, uint16_t udp_port_recv, uint16_t udp_port_send, locator_id_t locator_id);
 int          destroy_udp(const locator_id_t locator_id);
 int          open_udp   (udp_channel_t* channel);
 int          close_udp  (udp_channel_t* channel);

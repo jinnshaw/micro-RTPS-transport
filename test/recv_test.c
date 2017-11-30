@@ -11,13 +11,15 @@ int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
+    if (argc < 2) return -1;
+
     octet buffer[1024] = {};
     int len = 0;
 
-    locator_id_t loc_id = add_udp_locator(2019, 2020);
+    locator_id_t loc_id = add_udp_locator(argv[1], 2019, 2020);
 
-    int loops = 10;
-    while (loops--)
+    //int loops = 1000;
+    while (1)
     {
         if (0 < (len = receive_data(buffer, sizeof(buffer), loc_id)))
         {
@@ -25,7 +27,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("# recv len %d\n", len);
+            //printf("# recv len %d\n", len);
         }
     }
 
