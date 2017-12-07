@@ -206,7 +206,6 @@ int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
 {
     if (NULL == buffer       ||
         NULL == channel      ||
-        0 > channel->uart_fd ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
@@ -233,7 +232,6 @@ int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_
 
     serial_channel_t* channel = get_serial_channel(loc_id);
     if (NULL == channel      ||
-        0 > channel->uart_fd ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
@@ -262,7 +260,6 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
 {
     if (NULL == buffer       ||
         NULL == channel      ||
-        0 > channel->uart_fd ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
@@ -280,7 +277,6 @@ int send_serial(const header_t* header, const octet* in_buffer, const size_t len
 
     serial_channel_t* channel = get_serial_channel(loc_id);
     if (NULL == channel      ||
-        0 > channel->uart_fd ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
