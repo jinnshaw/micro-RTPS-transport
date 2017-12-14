@@ -15,7 +15,6 @@
 #ifndef _DDSXRCE_TRANSPORT_COMMON_H_
 #define _DDSXRCE_TRANSPORT_COMMON_H_
 
-#include <poll.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>

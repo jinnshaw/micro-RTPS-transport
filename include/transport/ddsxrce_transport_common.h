@@ -15,14 +15,19 @@
 #ifndef _DDSXRCE_TRANSPORT_COMMON_H_
 #define _DDSXRCE_TRANSPORT_COMMON_H_
 
-#include <poll.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_WIN32)
+#else
+#include <unistd.h>
+#include <termios.h>
+#include <poll.h>
 #ifndef __PX4_NUTTX
     #include <arpa/inet.h>
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -31,20 +36,28 @@ extern "C"
 #endif
 
 
+#if defined(_WIN32)
+#define __PACKED__(struct_to_pack) __pragma(pack(push, 1)) struct_to_pack __pragma(pack(pop))
+#else
+#define __PACKED__(struct_to_pack) struct_to_pack __attribute__((__packed__))
+#endif
+
 
 #define TRANSPORT_ERROR              -1
 #define TRANSPORT_OK                  0
 
 typedef unsigned char octet;
 
-typedef struct __attribute__((packed)) Header
+__PACKED__( struct Header
 {
     char marker[3];
     octet payload_len_h;
     octet payload_len_l;
     octet crc_h;
     octet crc_l;
-} header_t;
+});
+
+typedef struct Header header_t;
 
 typedef enum Kind
 {
@@ -56,18 +69,22 @@ typedef enum Kind
 
 typedef int16_t locator_id_t;
 
-typedef struct __attribute__((packed))
+__PACKED__( struct Locator
 {
     locator_id_t id;
     locator_kind_t kind;
     octet data[16];
-} locator_t;
+});
 
-typedef struct __attribute__((packed))
+typedef struct Locator locator_t;
+
+__PACKED__( struct Locator_id_plus
 {
     locator_id_t id;
     locator_kind_t kind;
-} locator_id_plus_t;
+});
+
+typedef struct Locator_id_plus locator_id_plus_t;
 
 /// SERIAL TRANSPORT
 

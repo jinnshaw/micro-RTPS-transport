@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <unistd.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <stdio.h>
 #include <errno.h>
-#include <poll.h>
 
 #include "ddsxrce_serial_transport.h"
 #include "ddsxrce_transport_common.h"

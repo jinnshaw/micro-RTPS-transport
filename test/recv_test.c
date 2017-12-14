@@ -16,10 +16,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <unistd.h>
 
+#include "ddsxrce_transport_common.h"
 #include <transport/ddsxrce_transport.h>
-
 
 int main(int argc, char *argv[])
 {
