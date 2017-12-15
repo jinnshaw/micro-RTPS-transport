@@ -15,6 +15,8 @@
 #ifndef _DDSXRCE_TRANSPORT_COMMON_H_
 #define _DDSXRCE_TRANSPORT_COMMON_H_
 
+#include "config.h"
+
 #include <poll.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -74,7 +76,7 @@ typedef struct __attribute__((packed))
 #define DFLT_UART             "/dev/ttyACM0"
 #define DFLT_BAUDRATE            115200
 #define DFLT_POLL_MS                 20
-#define RX_BUFFER_LENGTH           1024
+#define RX_BUFFER_LENGTH MAX_TRANSPORT_MESSAGE_SIZE
 #define UART_NAME_MAX_LENGTH         64
 #define IP_MAX_LENGTH                16
 #define MAX_NUM_CHANNELS              8
