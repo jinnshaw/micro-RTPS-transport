@@ -65,9 +65,28 @@ locator_id_t add_serial_locator(const char* device)
     return id;
 }
 
-locator_id_t add_udp_locator(const char* server_ip, const uint16_t udp_port_recv, const uint16_t udp_port_send)
+locator_id_t add_udp_locator_for_agent(const uint16_t local_udp_port)
 {
-    locator_id_t id = create_udp(server_ip, udp_port_recv, udp_port_send, ++g_loc_counter);
+    locator_id_t id = create_udp(local_udp_port, 0, NULL, ++g_loc_counter);
+    if (0 > id)
+    {
+        udp_channel_t* channel = get_udp_channel(id);
+        if (NULL == channel || 0 > open_udp(channel))
+        {
+            --g_loc_counter;
+            return TRANSPORT_ERROR;
+        }
+    }
+
+    g_loc_ids[g_loc_counter - 1].id = id;
+    g_loc_ids[g_loc_counter - 1].kind = LOC_UDP;
+
+    return id;
+}
+
+locator_id_t add_udp_locator_for_client(const uint16_t local_udp_port, const uint16_t remote_udp_port, const char* remote_ip)
+{
+    locator_id_t id = create_udp(local_udp_port, remote_udp_port, remote_ip, ++g_loc_counter);
     if (0 > id)
     {
         udp_channel_t* channel = get_udp_channel(id);

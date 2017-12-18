@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# send_test
-file(GLOB S_TEST_SOURCES "send_test.c")
-add_executable(send_test ${S_TEST_SOURCES})
-#install(TARGETS send_test DESTINATION ${CMAKE_BINARY_DIR}/install)
-target_link_libraries(send_test transport)
-
-# recv_test
-file(GLOB R_TEST_SOURCES "recv_test.c")
-add_executable(recv_test ${R_TEST_SOURCES})
-#install(TARGETS recv_test DESTINATION ${CMAKE_BINARY_DIR}/install)
-target_link_libraries(recv_test transport)
+include(${PROJECT_SOURCE_DIR}/cmake/dev/utils.cmake)
+file(GLOB_RECURSE files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+foreach(file ${files})
+    get_filename_component(file_name ${file} NAME_WE)
+    file(GLOB TEST_SRCS "${file_name}.c")
+    add_executable(${file_name} ${TEST_SRCS})
+    #install(TARGETS ${file_name} DESTINATION ${CMAKE_BINARY_DIR}/install)
+    target_link_libraries(${file_name} transport)
+endforeach()

@@ -21,12 +21,16 @@
 #include <string.h>
 
 #if defined(_WIN32)
+
 #else
+
 #include <unistd.h>
 #include <termios.h>
 #include <poll.h>
+
 #ifndef __PX4_NUTTX
-    #include <arpa/inet.h>
+#include <arpa/inet.h>
+
 #endif
 #endif
 
@@ -119,21 +123,24 @@ typedef struct
 
 } serial_channel_t;
 
+/// UDP TRANSPORT
+
+#define DFLT_UDP_PORT               2019
+
+
 typedef struct
 {
     buffer_t rx_buffer;
 
-    int sender_fd;
-    int receiver_fd;
-    uint16_t udp_port_recv;
-    uint16_t udp_port_send;
-#ifndef __PX4_NUTTX
-    struct sockaddr_in sender_outaddr;
-    struct sockaddr_in receiver_inaddr;
-    struct sockaddr_in receiver_outaddr;
-#endif
+    int socket_fd;
+    uint16_t local_udp_port;
+    uint16_t remote_udp_port;
 
-    char server_ip[IP_MAX_LENGTH];
+#ifndef __PX4_NUTTX
+    struct sockaddr_in local_addr;
+    struct sockaddr_in remote_addr;
+#endif
+    char remote_ip[IP_MAX_LENGTH];
     uint32_t poll_ms;
 
     uint8_t locator_id;
@@ -141,6 +148,7 @@ typedef struct
     bool open;
 
 } udp_channel_t;
+
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);

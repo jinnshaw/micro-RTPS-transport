@@ -24,24 +24,28 @@ int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
-    if (argc < 2) return -1;
+    //if (argc < 2) return -1;
 
-    octet buffer[1024] = {};
+    octet buffer[256] = {};
     int len = 0;
 
-    locator_id_t loc_id = add_udp_locator(argv[1], 2019, 2020);
+    locator_id_t loc_id = add_udp_locator_for_agent(2019);
 
-    //int loops = 1000;
-    while (1)
+    int loops = 1000;
+    while (loops--)
     {
         if (0 < (len = receive_data(buffer, sizeof(buffer), loc_id)))
         {
             printf(">> '%s'\n", buffer);
+            strcpy(buffer, "Mensaje_del_agent_");
+            while (0 >= send_data(buffer, strlen("Mensaje_del_agent_") + 1, loc_id)) usleep(10000);
+            printf("<< '%s'\n", buffer);
         }
         else
         {
-            //printf("# recv len %d\n", len);
+            printf("ERROR\n");
         }
+        usleep(1000000);
     }
 
     printf("exiting...\n");

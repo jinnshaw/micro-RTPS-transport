@@ -23,7 +23,8 @@ extern "C"
 #endif
 
 locator_id_t add_serial_locator(const char* device);
-locator_id_t add_udp_locator(const char* server_ip, const uint16_t udp_port_recv, const uint16_t udp_port_send);
+locator_id_t add_udp_locator_for_agent(const uint16_t local_udp_port);
+locator_id_t add_udp_locator_for_client(const uint16_t local_udp_port, const uint16_t agent_udp_port, const char* agent_ip);
 
 int rm_locator(const locator_id_t locator_id);
 

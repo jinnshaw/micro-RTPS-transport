@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,41 +17,30 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "ddsxrce_transport.h"
-#include "ddsxrce_transport_common.h"
-
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
 
 int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
-    //if (argc < 2) return -1;
+    struct ifaddrs *ifap, *ifa;
+    struct sockaddr_in *sa;
+    char *addr;
 
-    octet buffer[256] = {};
-    size_t buffer_len = 256;
-    int len = 0;
-
-    locator_id_t loc_id = add_udp_locator_for_client(2019, 2019, argv[1]);
-
-    int loops = 1000;
-    while (loops--)
+    getifaddrs (&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next)
     {
-        ++buffer[18];
-        strcpy(buffer, "Mensaje_del_client_");
-        if (0 < (len = send_data(buffer, strlen("Mensaje_del_client") + 1, loc_id)))
+        if (ifa->ifa_addr->sa_family == AF_INET)
         {
-            printf("<< '%s'\n", buffer);
-            while (0 >= receive_data(buffer, sizeof(buffer), loc_id)) usleep(10000);
-            printf(">> '%s'\n", buffer);
-
+            sa = (struct sockaddr_in *) ifa->ifa_addr;
+            addr = inet_ntoa(sa->sin_addr);
+            printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
         }
-        else
-        {
-            printf("ERROR\n");
-        }
-
-        usleep(1000000);
     }
+
+    freeifaddrs(ifap);
 
     printf("exiting...\n");
     return 0;
