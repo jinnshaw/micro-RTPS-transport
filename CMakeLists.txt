@@ -20,7 +20,6 @@ if (${CMAKE_VERSION} VERSION_GREATER 3.0)
     cmake_policy(SET CMP0048 OLD)
 endif()
 
-include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -87,6 +86,7 @@ endif()
 # Packaging
 ###############################################################################
 # Install public headers
+include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
 set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PROJECT_NAME}
     DESTINATION ${INCLUDE_INSTALL_DIR}
     COMPONENT headers
