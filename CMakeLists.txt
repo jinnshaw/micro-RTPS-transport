@@ -19,12 +19,16 @@ cmake_minimum_required(VERSION 2.8.12)
 if (${CMAKE_VERSION} VERSION_GREATER 3.0)
     cmake_policy(SET CMP0048 OLD)
 endif()
+
+include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
+
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
 project(transport C)
 
+set(MICRO_LIBRARY_NAME ${PROJECT_NAME})
 ###############################################################################
 # Version information                                                         #
 ###############################################################################
@@ -53,17 +57,60 @@ add_library(transport SHARED ${TRANSPORT_LIB_SOURCES})
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
-    ${PROJECT_BINARY_DIR}/include
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
 )
-
-install(TARGETS transport DESTINATION lib/)
 
 ###############################################################################
 # Testing
 ###############################################################################
 option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
 if(EPROSIMA_BUILD_TESTS)
-    add_subdirectory(test)
+add_subdirectory(test)
 endif()
+
+###############################################################################
+# Installation paths
+###############################################################################
+set(BIN_INSTALL_DIR bin/ CACHE PATH "Installation directory for binaries")
+set(INCLUDE_INSTALL_DIR include/ CACHE PATH "Installation directory for C headers")
+set(LIB_INSTALL_DIR lib/ CACHE PATH "Installation directory for libraries")
+set(DATA_INSTALL_DIR share/ CACHE PATH "Installation directory for data")
+if(WIN32)
+    set(LICENSE_INSTALL_DIR . CACHE PATH "Installation directory for licenses")
+else()
+    set(LICENSE_INSTALL_DIR ${DATA_INSTALL_DIR}/${PROJECT_NAME} CACHE PATH "Installation directory for licenses")
+endif()
+
+###############################################################################
+# Packaging
+###############################################################################
+# Install public headers
+set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PROJECT_NAME}
+    DESTINATION ${INCLUDE_INSTALL_DIR}
+    COMPONENT headers
+    )
+
+# Install config.h header
+set_public_header(${PROJECT_BINARY_DIR}/include . config.h
+    DESTINATION ${INCLUDE_INSTALL_DIR}/${PROJECT_NAME}
+    COMPONENT headers
+    )
+
+install(TARGETS ${MICRO_LIBRARY_NAME}
+        EXPORT ${MICRO_LIBRARY_NAME}Targets
+        RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+        ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+        COMPONENT libraries
+)
+
+export(TARGETS ${MICRO_LIBRARY_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}Targets.cmake)
+
+install(EXPORT ${MICRO_LIBRARY_NAME}Targets
+DESTINATION ${LIB_INSTALL_DIR}/${MICRO_LIBRARY_NAME}/cmake
+COMPONENT cmake
+)
+
+include(${PROJECT_SOURCE_DIR}/cmake/packaging/eProsimaPackaging.cmake)
