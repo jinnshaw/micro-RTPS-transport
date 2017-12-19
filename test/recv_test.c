@@ -17,19 +17,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "ddsxrce_transport_common.h"
 #include <transport/ddsxrce_transport.h>
 
 int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
-    //if (argc < 2) return -1;
+    if (argc < 2) return -1;
 
     octet buffer[256] = {};
     int len = 0;
 
-    locator_id_t loc_id = add_udp_locator_for_agent(2019);
+    locator_id_t loc_id = add_udp_locator(2020, 2019, 2019, argv[1]);
 
     int loops = 1000;
     while (loops--)
@@ -37,8 +36,9 @@ int main(int argc, char *argv[])
         if (0 < (len = receive_data(buffer, sizeof(buffer), loc_id)))
         {
             printf(">> '%s'\n", buffer);
-            strcpy(buffer, "Mensaje_del_agent_");
-            while (0 >= send_data(buffer, strlen("Mensaje_del_agent_") + 1, loc_id)) usleep(10000);
+            strcpy(buffer, "Mensaje___del_agent_");
+            ++buffer[8];
+            while (0 >= send_data(buffer, strlen("Mensaje___del_agent_") + 1, loc_id)) usleep(10000);
             printf("<< '%s'\n", buffer);
         }
         else

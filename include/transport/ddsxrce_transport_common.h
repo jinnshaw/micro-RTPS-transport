@@ -132,14 +132,19 @@ typedef struct
 {
     buffer_t rx_buffer;
 
-    int socket_fd;
-    uint16_t local_udp_port;
+    int recv_socket_fd;
+    int send_socket_fd;
+    uint16_t local_recv_udp_port;
+    uint16_t local_send_udp_port;
     uint16_t remote_udp_port;
 
 #ifndef __PX4_NUTTX
-    struct sockaddr_in local_addr;
-    struct sockaddr_in remote_addr;
+    struct sockaddr_in local_recv_addr;
+    struct sockaddr_in local_send_addr;
+    struct sockaddr_in remote_recv_addr;
+    struct sockaddr_in remote_send_addr;
 #endif
+
     char remote_ip[IP_MAX_LENGTH];
     uint32_t poll_ms;
 
