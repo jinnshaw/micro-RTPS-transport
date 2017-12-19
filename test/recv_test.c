@@ -23,12 +23,12 @@ int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
-    if (argc < 2) return -1;
+    if (argc < 5) return -1;
 
     octet buffer[256] = {};
     int len = 0;
 
-    locator_id_t loc_id = add_udp_locator(2020, 2019, 2019, argv[1]);
+    locator_id_t loc_id = add_udp_locator(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), argv[4]);
 
     int loops = 1000;
     while (loops--)
