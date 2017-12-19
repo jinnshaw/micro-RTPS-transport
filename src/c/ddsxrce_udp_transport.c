@@ -129,6 +129,8 @@ int init_udp(udp_channel_t* channel)
     channel->local_addr.sin_family = AF_INET;
     channel->remote_addr.sin_family = AF_INET;
     channel->local_addr.sin_port = htons(channel->local_udp_port);
+    channel->local_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0 - To use whatever interface (IP) of the system
+
     if (0 > bind(channel->socket_fd, (struct sockaddr *)&channel->local_addr, sizeof(channel->local_addr)))
     {
         printf("# bind failed\n");
