@@ -27,7 +27,7 @@ endif()
 
 project(transport C)
 
-set(MICRO_LIBRARY_NAME ${PROJECT_NAME})
+set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
 ###############################################################################
 # Version information                                                         #
 ###############################################################################
@@ -141,18 +141,18 @@ set_public_header(${PROJECT_BINARY_DIR}/include . config.h
     COMPONENT headers
     )
 
-install(TARGETS ${MICRO_LIBRARY_NAME}
-        EXPORT ${MICRO_LIBRARY_NAME}Targets
+install(TARGETS ${PROJECT_LIBRARY_NAME}
+        EXPORT ${PROJECT_LIBRARY_NAME}Targets
         RUNTIME DESTINATION ${BIN_INSTALL_DIR}
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
         COMPONENT libraries
 )
 
-export(TARGETS ${MICRO_LIBRARY_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}Targets.cmake)
+export(TARGETS ${PROJECT_LIBRARY_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_LIBRARY_NAME}Targets.cmake)
 
-install(EXPORT ${MICRO_LIBRARY_NAME}Targets
-DESTINATION ${LIB_INSTALL_DIR}/${MICRO_LIBRARY_NAME}/cmake
+install(EXPORT ${PROJECT_LIBRARY_NAME}Targets
+DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_LIBRARY_NAME}/cmake
 COMPONENT cmake
 )
 
