@@ -25,16 +25,60 @@ project(transport C)
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
 
-file(GLOB TRANSPORT_LIB_SOURCES
+file(GLOB ${PROJECT_NAME}_SOURCES
     src/c/*.c
 )
+set(PROJECT_VERSION 1)
+set(PROJECT_MAJOR_VERSION 2)
+set(PROJECT_MINOR_VERSION 3)
+# Create libraries
+if(MSVC OR MSVC_IDE)
+    add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
 
-add_library(transport SHARED ${TRANSPORT_LIB_SOURCES})
+    add_library(${PROJECT_NAME}_static STATIC ${${PROJECT_NAME}_SOURCES})
+    # Rename the library to have a "lib" before.
+    set_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME lib${PROJECT_NAME})
 
-target_include_directories(
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELEASE_POSTFIX -${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELWITHDEBINFO_POSTFIX -${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES DEBUG_POSTFIX d-${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
+
+    # Export symbols in DLL libraries
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_NAME_UPPER}_DYN_LINK)
+
+    # Define public headers
+    target_include_directories(${PROJECT_NAME} PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<INSTALL_INTERFACE:include>
+        )
+
+    # Define public headers for static library
+    target_include_directories(${PROJECT_NAME}_static PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<INSTALL_INTERFACE:include>
+        )
+else()
+    #Create library
+    add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
+    set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+    set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_MAJOR_VERSION})
+
+    # Define public headers
+    target_include_directories(
+        ${PROJECT_NAME} PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<INSTALL_INTERFACE:include>
+        )
+endif()
+
+
+# Link library to external win32 libraries.
+target_link_libraries(
     ${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
+    Ws2_32 kernel32
 )
 
 install(TARGETS transport DESTINATION lib/)

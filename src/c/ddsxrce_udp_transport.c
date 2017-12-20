@@ -20,9 +20,12 @@
 #include "ddsxrce_transport_common.h"
 
 #ifndef __PX4_NUTTX
+
 static udp_channel_t* g_channels[MAX_NUM_CHANNELS];
-static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 static uint8_t g_num_channels = 0;
+
+static struct pollfd g_poll_fds[MAX_NUM_CHANNELS];
+
 #endif
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
@@ -248,8 +251,15 @@ int close_udp(udp_channel_t* channel)
         #ifdef TRANSPORT_LOGS
         printf("> Close sending socket\n");
         #endif
+
+        #ifdef _WIN32
+        shutdown(channel->send_socket_fd, SD_BOTH);
+        closesocket(channel->send_socket_fd);
+        #else
         shutdown(channel->send_socket_fd, SHUT_RDWR);
         close(channel->send_socket_fd);
+        #endif
+
         channel->send_socket_fd = -1;
     }
 
@@ -258,8 +268,15 @@ int close_udp(udp_channel_t* channel)
         #ifdef TRANSPORT_LOGS
         printf("> Close reception socket\n");
         #endif
+
+        #ifdef _WIN32
+        shutdown(channel->recv_socket_fd, SD_BOTH);
+        closesocket(channel->recv_socket_fd);
+        #else
         shutdown(channel->recv_socket_fd, SHUT_RDWR);
         close(channel->recv_socket_fd);
+        #endif
+
         channel->recv_socket_fd = -1;
     }
 
@@ -284,8 +301,14 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
 
     // TODO: for several channels this can be optimized
     int ret = 0;
+    #ifdef _WIN32
+    int addrlen = sizeof(channel->remote_recv_addr);
+    int r = WSAPoll(g_poll_fds, g_num_channels, channel->poll_ms);
+    #else
     static socklen_t addrlen = sizeof(channel->remote_recv_addr);
     int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
+    #endif
+
     if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
     {
         ret = recvfrom(channel->recv_socket_fd, buffer, len, 0, (struct sockaddr *) &channel->remote_recv_addr, &addrlen);

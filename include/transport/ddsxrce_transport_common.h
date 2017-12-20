@@ -20,7 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(_WIN32)
+#ifdef _WIN32
+
+#include <Winsock2.h>
+#include <Ws2tcpip.h>
+#include <Windows.h>
 
 #else
 
@@ -31,8 +35,8 @@
 #ifndef __PX4_NUTTX
 #include <arpa/inet.h>
 
-#endif
-#endif
+#endif // __PX4_NUTTX
+#endif // _WIN32
 
 #ifdef __cplusplus
 extern "C"
@@ -132,8 +136,13 @@ typedef struct
 {
     buffer_t rx_buffer;
 
+#ifdef _WIN32
+    SOCKET recv_socket_fd;
+    SOCKET send_socket_fd;
+#else
     int recv_socket_fd;
     int send_socket_fd;
+#endif
     uint16_t local_recv_udp_port;
     uint16_t local_send_udp_port;
     uint16_t remote_udp_port;
@@ -158,6 +167,7 @@ typedef struct
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
 void print_buffer(const uint8_t* buffer, const size_t len);
+void eSleep(int milliseconds);
 
 #ifdef __cplusplus
 }

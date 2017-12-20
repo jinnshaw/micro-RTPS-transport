@@ -17,14 +17,19 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#else
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#endif // _WIN32
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+    printf("\n### Not implemented for this OS yet ###\n");
+#else
     printf("\nAt the very beginning everything was black\n\n");
-
     struct ifaddrs *ifap, *ifa;
     struct sockaddr_in *sa;
     char *addr;
@@ -41,6 +46,7 @@ int main(int argc, char *argv[])
     }
 
     freeifaddrs(ifap);
+#endif // _WIN32
 
     printf("exiting...\n");
     return 0;

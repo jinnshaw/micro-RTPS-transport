@@ -20,8 +20,11 @@
 #include "ddsxrce_transport_common.h"
 
 static serial_channel_t* g_channels[MAX_NUM_CHANNELS];
-static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 static uint8_t g_num_channels = 0;
+
+#ifndef _WIN32
+static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
+#endif
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
@@ -41,6 +44,9 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
 serial_channel_t* get_serial_channel(const locator_id_t locator_id)
 {
     serial_channel_t* ret = NULL;
+#ifdef _WIN32
+    return ret;
+#else
     for (int i = 0; i < g_num_channels; ++i)
     {
         if (NULL != g_channels[i] &&
@@ -51,9 +57,14 @@ serial_channel_t* get_serial_channel(const locator_id_t locator_id)
         }
     }
     return ret;
+#endif
 }
+
 locator_id_t create_serial(const char* device, locator_id_t loc_id)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == device || MAX_NUM_CHANNELS <= g_num_channels)
     {
         return TRANSPORT_ERROR;
@@ -86,10 +97,14 @@ locator_id_t create_serial(const char* device, locator_id_t loc_id)
     }
 
     return channel->locator_id;
+#endif
 }
 
 int destroy_serial(const locator_id_t loc_id)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     serial_channel_t* channel = get_serial_channel(loc_id);
     if (NULL == channel)
     {
@@ -104,10 +119,14 @@ int destroy_serial(const locator_id_t loc_id)
     free(channel);
 
     return TRANSPORT_OK;
+#endif
 }
 
 int open_serial(serial_channel_t* channel)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == channel)
     {
         return TRANSPORT_ERROR;
@@ -164,7 +183,7 @@ int open_serial(serial_channel_t* channel)
     {
         //printf("%s", aux);
         flush = true;
-        usleep(1000);
+        eSleep(1000);
     }
 
     if (flush)
@@ -181,10 +200,14 @@ int open_serial(serial_channel_t* channel)
     g_poll_fds[channel->idx].events = POLLIN;
 
     return channel->uart_fd;
+#endif
 }
 
 int close_serial(serial_channel_t* channel)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == channel || 0 > channel->uart_fd)
     {
         return TRANSPORT_ERROR;
@@ -197,10 +220,14 @@ int close_serial(serial_channel_t* channel)
     memset(&g_poll_fds[channel->idx], 0, sizeof(struct pollfd));
 
     return 0;
+#endif
 }
 
 int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == buffer       ||
         NULL == channel      ||
         (!channel->open && 0 > open_serial(channel)))
@@ -217,11 +244,15 @@ int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
     }
 
     return ret;
+#endif
 }
 
 
 int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == out_buffer)
     {
         return TRANSPORT_ERROR;
@@ -251,10 +282,14 @@ int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_
     // We read some bytes, trying extract a whole message
     channel->rx_buffer.buff_pos += len;
     return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
+#endif
 }
 
 int write_serial(const void* buffer, const size_t len, serial_channel_t* channel)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == buffer       ||
         NULL == channel      ||
         (!channel->open && 0 > open_serial(channel)))
@@ -263,10 +298,14 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
     }
 
     return write(channel->uart_fd, buffer, len);
+#endif
 }
 
 int send_serial(const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t loc_id)
 {
+#ifdef _WIN32
+    return TRANSPORT_ERROR;
+#else
     if (NULL == in_buffer)
     {
         return TRANSPORT_ERROR;
@@ -292,4 +331,5 @@ int send_serial(const header_t* header, const octet* in_buffer, const size_t len
     }
 
     return len; // only payload, + sizeof(header); for real size.
+#endif
 }
