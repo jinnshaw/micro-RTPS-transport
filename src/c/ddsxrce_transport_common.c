@@ -94,6 +94,7 @@ void print_buffer(const uint8_t* buffer, const size_t len)
 
 void eSleep(int milliseconds)
 {
+    printf("###############\n");
     #ifdef _WIN32
     Sleep(milliseconds);
     #else

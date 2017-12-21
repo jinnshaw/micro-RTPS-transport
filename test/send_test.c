@@ -19,15 +19,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-void eSleep(int milliseconds)
-{
-    #ifdef _WIN32
-    Sleep(milliseconds);
-    #else
-    usleep(milliseconds);
-    #endif
-}
-
 int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");

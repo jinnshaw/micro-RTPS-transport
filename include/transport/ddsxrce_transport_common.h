@@ -169,7 +169,7 @@ typedef struct
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
 void print_buffer(const uint8_t* buffer, const size_t len);
-void eSleep(int milliseconds);
+DLLEXPORT void eSleep(int milliseconds);
 
 #ifdef __cplusplus
 }
