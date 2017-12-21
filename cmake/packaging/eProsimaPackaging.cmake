@@ -1,4 +1,4 @@
-# Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+# Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,17 +43,17 @@ if(NOT((MSVC OR MSVC_IDE) AND EPROSIMA_INSTALLER))
 
     include(CMakePackageConfigHelpers)
     configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/packaging/Config.cmake.in
-        ${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}Config.cmake
-        INSTALL_DESTINATION ${LIB_INSTALL_DIR}${DIR_EXTENSION}/${MICRO_LIBRARY_NAME}/cmake
+        ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}Config.cmake
+        INSTALL_DESTINATION ${LIB_INSTALL_DIR}${DIR_EXTENSION}/${PROJECT_NAME}/cmake
         PATH_VARS BIN_INSTALL_DIR INCLUDE_INSTALL_DIR LIB_INSTALL_DIR
         )
-    write_basic_package_version_file(${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}ConfigVersion.cmake
+    write_basic_package_version_file(${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}ConfigVersion.cmake
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion
         )
-    install(FILES ${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}Config.cmake
-        ${PROJECT_BINARY_DIR}/cmake/config/${MICRO_LIBRARY_NAME}ConfigVersion.cmake
-        DESTINATION ${LIB_INSTALL_DIR}${DIR_EXTENSION}/${MICRO_LIBRARY_NAME}/cmake
+    install(FILES ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}Config.cmake
+        ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${LIB_INSTALL_DIR}${DIR_EXTENSION}/${PROJECT_NAME}/cmake
         COMPONENT cmake
         )
 endif()
