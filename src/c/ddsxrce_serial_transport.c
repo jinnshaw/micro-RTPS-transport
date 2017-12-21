@@ -183,7 +183,7 @@ int open_serial(serial_channel_t* channel)
     {
         //printf("%s", aux);
         flush = true;
-        eSleep(1000);
+        ms_sleep(1);
     }
 
     if (flush)

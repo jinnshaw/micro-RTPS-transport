@@ -30,24 +30,22 @@ int main(int argc, char *argv[])
 
     locator_id_t loc_id = add_udp_locator(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), argv[4]);
 
-    int loops = 1000;
-    while (loops--)
+    int loops = 0;
+    while (++loops <= 1000)
     {
-        strcpy(buffer, "Mensaje___del_client_");
-        ++buffer[8];
-        if (0 < (len = send_data(buffer, strlen("Mensaje___del_client") + 1, loc_id)))
+        strcpy(buffer, "Message from sender");
+        if (0 < (len = send_data(buffer, strlen(buffer) + 1, loc_id)))
         {
             printf("<< '%s'\n", buffer);
-            while (0 >= receive_data(buffer, sizeof(buffer), loc_id)) eSleep(10000);
+            while (0 >= receive_data(buffer, sizeof(buffer), loc_id)) ms_sleep(100);
             printf(">> '%s'\n", buffer);
 
         }
-        else
+        else if (0 > len)
         {
             printf("ERROR\n");
         }
-
-        eSleep(1000000);
+        ms_sleep(100);
     }
 
     printf("exiting...\n");
