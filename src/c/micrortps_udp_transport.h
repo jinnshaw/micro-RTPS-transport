@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _DDSXRCE_UDP_TRANSPORT_H_
-#define _DDSXRCE_UDP_TRANSPORT_H_
+#ifndef _MICRORTPS_UDP_TRANSPORT_H_
+#define _MICRORTPS_UDP_TRANSPORT_H_
 
-#include "ddsxrce_transport_common.h"
+#include "micrortps_transport_common.h"
 
 #ifdef __cplusplus
 extern "C"

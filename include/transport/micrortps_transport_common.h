@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _DDSXRCE_TRANSPORT_COMMON_H_
-#define _DDSXRCE_TRANSPORT_COMMON_H_
+#ifndef _MICRORTPS_TRANSPORT_COMMON_H_
+#define _MICRORTPS_TRANSPORT_COMMON_H_
 
 #include "config.h"
 #include "micrortps_transport_dll.h"

@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "ddsxrce_serial_transport.h"
-#include "ddsxrce_transport_common.h"
+#include "micrortps_serial_transport.h"
+#include "micrortps_transport_common.h"
 
 static serial_channel_t* g_channels[MAX_NUM_CHANNELS];
 static uint8_t g_num_channels = 0;
@@ -275,12 +275,10 @@ int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_
         {
             printf("Read fail %d\n", errsv);
         }
-
-        return len;
     }
 
     // We read some bytes, trying extract a whole message
-    channel->rx_buffer.buff_pos += len;
+    if (0 < len) channel->rx_buffer.buff_pos += len;
     return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
 #endif
 }

@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "ddsxrce_transport_common.h"
+#include "micrortps_transport_common.h"
 
 #ifdef __cplusplus
 extern "C"

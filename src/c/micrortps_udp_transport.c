@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "ddsxrce_udp_transport.h"
+#include "micrortps_udp_transport.h"
 
 #ifndef __PX4_NUTTX
 
@@ -362,12 +362,10 @@ int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t l
         {
             printf("# Read fail %d\n", errsv);
         }
-
-        return len;
     }
 
     // We read some bytes, trying extract a whole message
-    (*rx_buff_pos) += len;
+    if (0 < len) (*rx_buff_pos) += len;
     return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
 #endif /* __PX4_NUTTX */
 
