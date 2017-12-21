@@ -12,12 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <transport/ddsxrce_transport.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <transport/ddsxrce_transport.h>
+void eSleep(int milliseconds)
+{
+    #ifdef _WIN32
+    Sleep(milliseconds);
+    #else
+    usleep(milliseconds);
+    #endif
+}
 
 int main(int argc, char *argv[])
 {

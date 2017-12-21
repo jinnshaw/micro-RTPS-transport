@@ -16,6 +16,7 @@
 #define _DDSXRCE_TRANSPORT_COMMON_H_
 
 #include "config.h"
+#include "micrortps_transport_dll.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -26,7 +27,7 @@
 
 #include <Winsock2.h>
 #include <Ws2tcpip.h>
-#include <Windows.h>
+#include <WinBase.h>
 
 #else
 
@@ -57,6 +58,7 @@ extern "C"
 #define TRANSPORT_OK                  0
 
 typedef unsigned char octet;
+typedef int16_t locator_id_t;
 
 __PACKED__( struct Header
 {
@@ -76,8 +78,6 @@ typedef enum Kind
     LOC_UDP,
 
 } locator_kind_t;
-
-typedef int16_t locator_id_t;
 
 __PACKED__( struct Locator
 {

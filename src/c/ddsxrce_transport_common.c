@@ -11,10 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#ifndef _DDSXRCE_TRANSPORT_COMMON_H_
-#define _DDSXRCE_TRANSPORT_COMMON_H_
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -109,4 +105,3 @@ void eSleep(int milliseconds)
 }
 #endif
 
-#endif

@@ -17,7 +17,6 @@
 #include <errno.h>
 
 #include "ddsxrce_udp_transport.h"
-#include "ddsxrce_transport_common.h"
 
 #ifndef __PX4_NUTTX
 

@@ -21,8 +21,15 @@ if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 endif()
 
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+# Set CMAKE_BUILD_TYPE to Release by default.
+if(DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+        )
+else()
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+        )
 endif()
 
 project(transport C)
@@ -33,7 +40,7 @@ set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
 ###############################################################################
 set(PROJECT_MAJOR_VERSION 0)
 set(PROJECT_MINOR_VERSION 0)
-set(PROJECT_MICRO_VERSION 1)
+set(PROJECT_MICRO_VERSION 2)
 set(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_MICRO_VERSION})
 message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
@@ -44,27 +51,37 @@ message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 set(MAX_MESSAGE_SIZE 512 CACHE STRING "Define maximum message size to be used")
 
 configure_file(${PROJECT_SOURCE_DIR}/include/config.h.in
-${PROJECT_BINARY_DIR}/include/config.h)
+               ${PROJECT_BINARY_DIR}/include/config.h
+               )
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
+###############################################################################
+# Warning level
+###############################################################################
+if(MSVC OR MSVC_IDE)
+    if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+        string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    endif()
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
+endif()
 
+# Set source files
 file(GLOB ${PROJECT_NAME}_SOURCES
     src/c/*.c
 )
-set(PROJECT_VERSION 1)
-set(PROJECT_MAJOR_VERSION 2)
-set(PROJECT_MINOR_VERSION 3)
+
 # Create libraries
 if(MSVC OR MSVC_IDE)
-    add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES})
-
+    add_library(${PROJECT_NAME}        SHARED ${${PROJECT_NAME}_SOURCES})
     add_library(${PROJECT_NAME}_static STATIC ${${PROJECT_NAME}_SOURCES})
     # Rename the library to have a "lib" before.
-    set_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME lib${PROJECT_NAME})
-
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELEASE_POSTFIX -${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELWITHDEBINFO_POSTFIX -${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES DEBUG_POSTFIX d-${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
+    set_target_properties(                ${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME            lib${PROJECT_NAME})
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELEASE_POSTFIX        -${PROJECT_VERSION})
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELWITHDEBINFO_POSTFIX -${PROJECT_VERSION})
+    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES DEBUG_POSTFIX          d-${PROJECT_VERSION})
 
     # Export symbols in DLL libraries
     target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_NAME_UPPER}_DYN_LINK)
@@ -72,16 +89,25 @@ if(MSVC OR MSVC_IDE)
     # Define public headers
     target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
         )
 
     # Define public headers for static library
     target_include_directories(${PROJECT_NAME}_static PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
         )
+
+    # Link library to external win32 libraries.
+    target_link_libraries(
+        ${PROJECT_NAME} PUBLIC
+        Ws2_32 Kernel32
+        )
+
 else()
     #Create library
     add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
@@ -92,17 +118,13 @@ else()
     target_include_directories(
         ${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
         )
 endif()
 
 
-# Link library to external win32 libraries.
-target_link_libraries(
-    ${PROJECT_NAME} PUBLIC
-    Ws2_32 kernel32
-)
 
 ###############################################################################
 # Testing
