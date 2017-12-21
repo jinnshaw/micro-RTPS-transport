@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
         {
             printf("ERROR\n");
         }
+        fflush(stdout);
         ms_sleep(100);
     }
 

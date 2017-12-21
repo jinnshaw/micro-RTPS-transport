@@ -22,8 +22,11 @@
 
 static udp_channel_t* g_channels[MAX_NUM_CHANNELS];
 static uint8_t g_num_channels = 0;
-
 static struct pollfd g_poll_fds[MAX_NUM_CHANNELS];
+
+#ifdef _WIN32
+static WSADATA wsa;
+#endif
 
 #endif
 
@@ -123,6 +126,14 @@ int init_udp(udp_channel_t* channel)
         printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
+#ifdef _WIN32
+    //Initialise winsock
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+    {
+        printf("Failed initialising Winsock, error code: %d\n",WSAGetLastError());
+        return TRANSPORT_ERROR;
+    }
+#endif
 
     // Local address for reception
     memset((char *)&channel->local_recv_addr, 0, sizeof(channel->local_recv_addr));
@@ -254,6 +265,7 @@ int close_udp(udp_channel_t* channel)
         #ifdef _WIN32
         shutdown(channel->send_socket_fd, SD_BOTH);
         closesocket(channel->send_socket_fd);
+        WSACleanup();
         #else
         shutdown(channel->send_socket_fd, SHUT_RDWR);
         close(channel->send_socket_fd);
@@ -271,6 +283,7 @@ int close_udp(udp_channel_t* channel)
         #ifdef _WIN32
         shutdown(channel->recv_socket_fd, SD_BOTH);
         closesocket(channel->recv_socket_fd);
+        WSACleanup();
         #else
         shutdown(channel->recv_socket_fd, SHUT_RDWR);
         close(channel->recv_socket_fd);
