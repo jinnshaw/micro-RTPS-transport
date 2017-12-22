@@ -20,6 +20,10 @@ if (${CMAKE_VERSION} VERSION_GREATER 3.0)
     cmake_policy(SET CMP0048 OLD)
 endif()
 
+set(IS_TOP_LEVEL TRUE)
+    if(NOT PROJECT_SOURCE_DIR STREQUAL "")
+    set(IS_TOP_LEVEL FALSE)
+endif()
 
 # Set CMAKE_BUILD_TYPE to Release by default.
 if(DEFINED CMAKE_BUILD_TYPE)
@@ -135,7 +139,7 @@ endif()
 # Testing
 ###############################################################################
 option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
-if(EPROSIMA_BUILD_TESTS)
+if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
 add_subdirectory(test)
 endif()
 
