@@ -16,10 +16,9 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include "micrortps_transport_common.h"
 #include "micrortps_serial_transport.h"
 #include "micrortps_udp_transport.h"
-#include "micrortps_transport.h"
+#include <transport/micrortps_transport.h>
 
 static locator_id_t g_loc_counter = 0;
 static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];

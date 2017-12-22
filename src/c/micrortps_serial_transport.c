@@ -17,7 +17,6 @@
 #include <errno.h>
 
 #include "micrortps_serial_transport.h"
-#include "micrortps_transport_common.h"
 
 static serial_channel_t* g_channels[MAX_NUM_CHANNELS];
 static uint8_t g_num_channels = 0;

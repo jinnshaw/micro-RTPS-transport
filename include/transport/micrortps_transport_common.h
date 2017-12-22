@@ -15,7 +15,6 @@
 #ifndef _MICRORTPS_TRANSPORT_COMMON_H_
 #define _MICRORTPS_TRANSPORT_COMMON_H_
 
-#include "config.h"
 #include "micrortps_transport_dll.h"
 
 #include <stdint.h>
