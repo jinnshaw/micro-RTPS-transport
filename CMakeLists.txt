@@ -21,7 +21,7 @@ if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 endif()
 
 set(IS_TOP_LEVEL TRUE)
-    if(NOT PROJECT_SOURCE_DIR STREQUAL "")
+if(NOT "${PROJECT_SOURCE_DIR}" STREQUAL "")
     set(IS_TOP_LEVEL FALSE)
 endif()
 
@@ -36,7 +36,7 @@ else()
         )
 endif()
 
-project(transport C)
+project(transport)
 
 set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
 ###############################################################################
@@ -140,7 +140,7 @@ endif()
 ###############################################################################
 option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
 if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
-add_subdirectory(test)
+    add_subdirectory(test)
 endif()
 
 ###############################################################################
