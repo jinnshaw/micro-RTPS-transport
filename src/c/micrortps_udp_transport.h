@@ -27,8 +27,8 @@ locator_id_t create_udp (uint16_t local_send_udp_port, uint16_t local_recv_udp_p
 int          destroy_udp(const locator_id_t locator_id);
 int          open_udp   (udp_channel_t* channel);
 int          close_udp  (udp_channel_t* channel);
-int          send_udp   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          send_udp   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
 udp_channel_t* get_udp_channel(const locator_id_t locator_id);
 

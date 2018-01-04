@@ -28,8 +28,8 @@ DLLEXPORT locator_id_t add_udp_locator(const uint16_t local_send_udp_port, const
 
 DLLEXPORT int rm_locator(const locator_id_t locator_id);
 
-DLLEXPORT int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
-DLLEXPORT int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+DLLEXPORT int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
+DLLEXPORT int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
 #ifdef __cplusplus
 }

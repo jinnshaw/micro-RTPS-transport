@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     if (argc < 2) return -1;
 
-    octet buffer[256];
+    octet_t buffer[256];
     int len = 0;
 
     locator_id_t loc_id = add_udp_locator(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), argv[4]);

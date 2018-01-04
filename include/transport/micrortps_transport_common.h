@@ -56,16 +56,16 @@ extern "C"
 #define TRANSPORT_ERROR              -1
 #define TRANSPORT_OK                  0
 
-typedef unsigned char octet;
+typedef unsigned char octet_t;
 typedef int16_t locator_id_t;
 
 __PACKED__( struct Header
 {
     char marker[3];
-    octet payload_len_h;
-    octet payload_len_l;
-    octet crc_h;
-    octet crc_l;
+    octet_t payload_len_h;
+    octet_t payload_len_l;
+    octet_t crc_h;
+    octet_t crc_l;
 });
 
 typedef struct Header header_t;
@@ -82,7 +82,7 @@ __PACKED__( struct Locator
 {
     locator_id_t id;
     locator_kind_t kind;
-    octet data[16];
+    octet_t data[16];
 });
 
 typedef struct Locator locator_t;
@@ -109,7 +109,7 @@ typedef struct Locator_id_plus locator_id_plus_t;
 
 typedef struct
 {
-    octet buffer[RX_BUFFER_LENGTH];
+    octet_t buffer[RX_BUFFER_LENGTH];
     uint16_t buff_pos;
 } buffer_t;
 

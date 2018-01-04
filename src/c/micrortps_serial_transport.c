@@ -27,14 +27,14 @@ static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
 locator_id_t create_serial (const char* device, locator_id_t locator_id);
 int          destroy_serial(const locator_id_t locator_id);
 int          open_serial   (serial_channel_t* channel);
 int          close_serial  (serial_channel_t* channel);
-int          send_serial   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          send_serial   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
 serial_channel_t* get_serial_channel(const locator_id_t locator_id);
 int read_serial(void *buffer, const size_t len, serial_channel_t* channel);
@@ -247,7 +247,7 @@ int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
 }
 
 
-int receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
+int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
@@ -298,7 +298,7 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
 #endif
 }
 
-int send_serial(const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t loc_id)
+int send_serial(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t loc_id)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;

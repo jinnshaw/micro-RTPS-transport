@@ -32,7 +32,7 @@ static WSADATA wsa;
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 int init_udp(udp_channel_t* channel);
 
 locator_id_t create_udp (uint16_t local_send_udp_port, uint16_t local_recv_udp_port, uint16_t remote_udp_port,
@@ -40,8 +40,8 @@ locator_id_t create_udp (uint16_t local_send_udp_port, uint16_t local_recv_udp_p
 int          destroy_udp(const locator_id_t locator_id);
 int          open_udp   (udp_channel_t* channel);
 int          close_udp  (udp_channel_t* channel);
-int          send_udp   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          send_udp   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
 udp_channel_t* get_udp_channel(const locator_id_t locator_id);
 int read_udp(void *buffer, const size_t len, udp_channel_t* channel);
@@ -333,7 +333,7 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
 }
 
 
-int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
+int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
 {
 #ifndef __PX4_NUTTX
     if (NULL == out_buffer)
@@ -350,7 +350,7 @@ int receive_udp(octet* out_buffer, const size_t buffer_len, const locator_id_t l
         return TRANSPORT_ERROR;
     }
 
-    octet* rx_buffer = channel->rx_buffer.buffer;
+    octet_t* rx_buffer = channel->rx_buffer.buffer;
     uint16_t* rx_buff_pos = &(channel->rx_buffer.buff_pos);
 
     int len = read_udp((void *) (rx_buffer + (*rx_buff_pos)), sizeof(channel->rx_buffer.buffer) - (*rx_buff_pos), channel);
@@ -396,7 +396,7 @@ int write_udp(const void* buffer, const size_t len, udp_channel_t* channel)
     return TRANSPORT_ERROR;
 }
 
-int send_udp(const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t loc_id)
+int send_udp(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t loc_id)
 {
 #ifndef __PX4_NUTTX
     if (NULL == in_buffer)

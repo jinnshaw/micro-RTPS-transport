@@ -24,7 +24,7 @@ static locator_id_t g_loc_counter = 0;
 static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];
 
 locator_kind_t get_kind(const locator_id_t locator_id);
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
 
 locator_kind_t get_kind(const locator_id_t locator_id)
@@ -106,7 +106,7 @@ int rm_locator(const locator_id_t locator_id)
     return  TRANSPORT_OK;
 }
 
-int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_t locator_id)
+int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id)
 {
     if (NULL == in_buffer)
     {
@@ -140,7 +140,7 @@ int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_
     }
 }
 
-int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id)
+int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id)
 {
     if (NULL == out_buffer)
     {
@@ -156,7 +156,7 @@ int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t 
     }
 }
 
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer)
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer)
 {
     if (NULL == out_buffer || NULL == internal_buffer)
     {
@@ -164,7 +164,7 @@ int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* intern
         return TRANSPORT_ERROR;
     }
 
-    octet* rx_buffer = internal_buffer->buffer;
+    octet_t* rx_buffer = internal_buffer->buffer;
     uint16_t* rx_buff_pos = &(internal_buffer->buff_pos);
 
     // We read some
