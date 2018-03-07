@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ locator_id_t create_serial (const char* device, locator_id_t locator_id);
 int          destroy_serial(const locator_id_t locator_id);
 int          open_serial   (serial_channel_t* channel);
 int          close_serial  (serial_channel_t* channel);
-int          send_serial   (const header_t* header, const octet* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_serial(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          send_serial   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
+int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
 serial_channel_t* get_serial_channel(const locator_id_t locator_id);
 

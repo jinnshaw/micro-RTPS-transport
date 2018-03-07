@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,16 +56,16 @@ extern "C"
 #define TRANSPORT_ERROR              -1
 #define TRANSPORT_OK                  0
 
-typedef unsigned char octet;
+typedef unsigned char octet_t;
 typedef int16_t locator_id_t;
 
 __PACKED__( struct Header
 {
     char marker[3];
-    octet payload_len_h;
-    octet payload_len_l;
-    octet crc_h;
-    octet crc_l;
+    octet_t payload_len_h;
+    octet_t payload_len_l;
+    octet_t crc_h;
+    octet_t crc_l;
 });
 
 typedef struct Header header_t;
@@ -82,7 +82,7 @@ __PACKED__( struct Locator
 {
     locator_id_t id;
     locator_kind_t kind;
-    octet data[16];
+    octet_t data[16];
 });
 
 typedef struct Locator locator_t;
@@ -95,12 +95,12 @@ __PACKED__( struct Locator_id_plus
 
 typedef struct Locator_id_plus locator_id_plus_t;
 
-/// SERIAL TRANSPORT
+/// Serial transport
 
 #define DFLT_UART             "/dev/ttyACM0"
 #define DFLT_BAUDRATE            115200
 #define DFLT_POLL_MS                 20
-#define RX_BUFFER_LENGTH MAX_TRANSPORT_MESSAGE_SIZE
+#define RX_BUFFER_LENGTH      MAX_TRANSPORT_MESSAGE_SIZE
 #define UART_NAME_MAX_LENGTH         64
 #define IP_MAX_LENGTH                16
 #define MAX_NUM_CHANNELS              8
@@ -109,7 +109,7 @@ typedef struct Locator_id_plus locator_id_plus_t;
 
 typedef struct
 {
-    octet buffer[RX_BUFFER_LENGTH];
+    octet_t buffer[RX_BUFFER_LENGTH];
     uint16_t buff_pos;
 } buffer_t;
 
@@ -128,7 +128,7 @@ typedef struct
 
 } serial_channel_t;
 
-/// UDP TRANSPORT
+/// UDP transport
 
 #define DFLT_UDP_PORT               2019
 
@@ -138,21 +138,18 @@ typedef struct
     buffer_t rx_buffer;
 
 #ifdef _WIN32
-    SOCKET recv_socket_fd;
-    SOCKET send_socket_fd;
+    SOCKET socket_fd;
 #else
-    int recv_socket_fd;
-    int send_socket_fd;
+    int socket_fd;
 #endif
-    uint16_t local_recv_udp_port;
-    uint16_t local_send_udp_port;
+
+    uint16_t local_udp_port;
     uint16_t remote_udp_port;
 
+
 #ifndef __PX4_NUTTX
-    struct sockaddr_in local_recv_addr;
-    struct sockaddr_in local_send_addr;
-    struct sockaddr_in remote_recv_addr;
-    struct sockaddr_in remote_send_addr;
+    struct sockaddr_in local_addr;
+    struct sockaddr_in remote_addr;
 #endif
 
     char remote_ip[IP_MAX_LENGTH];

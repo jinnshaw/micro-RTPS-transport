@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ static locator_id_t g_loc_counter = 0;
 static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];
 
 locator_kind_t get_kind(const locator_id_t locator_id);
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
 
 locator_kind_t get_kind(const locator_id_t locator_id)
@@ -64,10 +64,30 @@ locator_id_t add_serial_locator(const char* device)
     return id;
 }
 
-locator_id_t add_udp_locator(const uint16_t local_send_udp_port, const uint16_t local_recv_udp_port,
-                             const uint16_t remote_udp_port, const char* remote_ip)
+locator_id_t add_udp_locator_for_agent(const uint16_t local_udp_port)
+
 {
-    locator_id_t id = create_udp(local_send_udp_port, local_recv_udp_port, remote_udp_port, remote_ip, ++g_loc_counter);
+    locator_id_t id = create_udp(local_udp_port, 0, NULL, ++g_loc_counter);
+    if (0 > id)
+    {
+        udp_channel_t* channel = get_udp_channel(id);
+        if (NULL == channel || 0 > open_udp(channel))
+        {
+            --g_loc_counter;
+            return TRANSPORT_ERROR;
+        }
+    }
+
+    g_loc_ids[g_loc_counter - 1].id = id;
+    g_loc_ids[g_loc_counter - 1].kind = LOC_UDP;
+
+    return id;
+}
+
+locator_id_t add_udp_locator_for_client(const uint16_t local_udp_port, const uint16_t remote_udp_port, const char* remote_ip)
+{
+    locator_id_t id = create_udp(local_udp_port, remote_udp_port, remote_ip, ++g_loc_counter);
+
     if (0 > id)
     {
         udp_channel_t* channel = get_udp_channel(id);
@@ -106,7 +126,7 @@ int rm_locator(const locator_id_t locator_id)
     return  TRANSPORT_OK;
 }
 
-int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_t locator_id)
+int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id)
 {
     if (NULL == in_buffer)
     {
@@ -140,7 +160,7 @@ int send_data(const octet* in_buffer, const size_t buffer_len, const locator_id_
     }
 }
 
-int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t locator_id)
+int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id)
 {
     if (NULL == out_buffer)
     {
@@ -156,7 +176,7 @@ int receive_data(octet* out_buffer, const size_t buffer_len, const locator_id_t 
     }
 }
 
-int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* internal_buffer)
+int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer)
 {
     if (NULL == out_buffer || NULL == internal_buffer)
     {
@@ -164,7 +184,7 @@ int extract_message(octet* out_buffer, const size_t buffer_len, buffer_t* intern
         return TRANSPORT_ERROR;
     }
 
-    octet* rx_buffer = internal_buffer->buffer;
+    octet_t* rx_buffer = internal_buffer->buffer;
     uint16_t* rx_buff_pos = &(internal_buffer->buff_pos);
 
     // We read some
