@@ -1,4 +1,4 @@
-# Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+# Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,9 +42,9 @@ set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
 ###############################################################################
 # Version information                                                         #
 ###############################################################################
-set(PROJECT_MAJOR_VERSION 0)
+set(PROJECT_MAJOR_VERSION 1)
 set(PROJECT_MINOR_VERSION 0)
-set(PROJECT_MICRO_VERSION 2)
+set(PROJECT_MICRO_VERSION 0)
 set(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_MICRO_VERSION})
 message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
@@ -139,6 +139,11 @@ endif()
 # Testing
 ###############################################################################
 option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
+
+if(EPROSIMA_BUILD)
+    set(EPROSIMA_BUILD_TESTS ON)
+endif()
+
 if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
     add_subdirectory(test)
 endif()

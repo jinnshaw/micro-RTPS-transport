@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,8 +35,7 @@ uint16_t crc16(uint8_t const *buffer, size_t len);
 int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 int init_udp(udp_channel_t* channel);
 
-locator_id_t create_udp (uint16_t local_send_udp_port, uint16_t local_recv_udp_port, uint16_t remote_udp_port,
-                         const char* remote_ip, locator_id_t loc_id);
+locator_id_t create_udp (uint16_t local_udp_port, uint16_t remote_udp_port, const char* remote_ip, locator_id_t loc_id);
 int          destroy_udp(const locator_id_t locator_id);
 int          open_udp   (udp_channel_t* channel);
 int          close_udp  (udp_channel_t* channel);
@@ -66,8 +65,7 @@ udp_channel_t* get_udp_channel(const locator_id_t locator_id)
     return NULL;
 }
 
-locator_id_t create_udp(uint16_t local_send_udp_port, uint16_t local_recv_udp_port, uint16_t remote_udp_port,
-                        const char* remote_ip, locator_id_t loc_id)
+locator_id_t create_udp(uint16_t local_udp_port, uint16_t remote_udp_port, const char* remote_ip, locator_id_t loc_id)
 {
 #ifndef __PX4_NUTTX
     if (0 > loc_id)
@@ -84,10 +82,8 @@ locator_id_t create_udp(uint16_t local_send_udp_port, uint16_t local_recv_udp_po
 
     memset(channel->rx_buffer.buffer, 0, RX_BUFFER_LENGTH);
     channel->rx_buffer.buff_pos = 0;
-    channel->send_socket_fd = -1;
-    channel->recv_socket_fd = -1;
-    channel->local_recv_udp_port = local_recv_udp_port;
-    channel->local_send_udp_port = local_send_udp_port;
+    channel->socket_fd = -1;
+    channel->local_udp_port = local_udp_port;
     channel->remote_udp_port = remote_udp_port;
     channel->poll_ms = DFLT_POLL_MS;
     channel->open = false;
@@ -126,6 +122,7 @@ int init_udp(udp_channel_t* channel)
         printf("# BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
+
 #ifdef _WIN32
     //Initialise winsock
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -135,66 +132,46 @@ int init_udp(udp_channel_t* channel)
     }
 #endif
 
-    // Local address for reception
-    memset((char *)&channel->local_recv_addr, 0, sizeof(channel->local_recv_addr));
-    channel->local_recv_addr.sin_family = AF_INET;
-    channel->local_recv_addr.sin_port = htons(channel->local_recv_udp_port);
-    channel->local_recv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0 - To use whatever interface (IP) of the system
+    if (0 > (channel->socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
 
-    // Local address for sending
-    memset((char *)&channel->local_send_addr, 0, sizeof(channel->local_send_addr));
-    channel->local_send_addr.sin_family = AF_INET;
-    channel->local_send_addr.sin_port = htons(channel->local_send_udp_port);
-    channel->local_send_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0 - To use whatever interface (IP) of the system
-
-    // Remote address for sending
-    memset((char *)&channel->remote_send_addr, 0, sizeof(channel->remote_send_addr));
-    channel->remote_send_addr.sin_family = AF_INET;
-    channel->remote_send_addr.sin_port = htons(channel->remote_udp_port);
-    if (0 == strlen(channel->remote_ip))
-    {
-        printf("# error, empty remote ip do not \n");
-        return TRANSPORT_ERROR;
-    }
-    if (0 >= inet_pton(AF_INET, channel->remote_ip, &channel->remote_send_addr.sin_addr))
-    {
-        printf("# inet_aton() failed\n");
-        return TRANSPORT_ERROR;
-    }
-
-    // Remote address to receiving, known in each reception
-    memset((char *)&channel->remote_recv_addr, 0, sizeof(channel->remote_recv_addr));
-
-    // Reception socket
-    if (0 > (channel->recv_socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
     {
         printf("# create socket failed\n");
         return TRANSPORT_ERROR;
     }
-    if (0 > bind(channel->recv_socket_fd, (struct sockaddr *)&channel->local_recv_addr, sizeof(channel->local_recv_addr)))
-    {
-        printf("# bind for recv socket failed\n");
-        return TRANSPORT_ERROR;
-    }
-    #ifdef TRANSPORT_LOGS
-    printf("> UDP receiver socket initialized on port %d\n", channel->local_udp_port);
-    #endif
 
-    // Sending socket
-    if (0 > (channel->send_socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+    memset((char *)&channel->local_addr, 0, sizeof(channel->local_addr));
+    memset((char *)&channel->remote_addr, 0, sizeof(channel->remote_addr));
+    channel->local_addr.sin_family = AF_INET;
+    channel->remote_addr.sin_family = AF_INET;
+    channel->local_addr.sin_port = htons(channel->local_udp_port);
+    channel->local_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0 - To use whatever interface (IP) of the system
+
+    if (0 > bind(channel->socket_fd, (struct sockaddr *)&channel->local_addr, sizeof(channel->local_addr)))
     {
-        printf("# create socket failed\n");
-        return TRANSPORT_ERROR;
-    }
-    if (0 > bind(channel->send_socket_fd, (struct sockaddr *)&channel->local_send_addr, sizeof(channel->local_send_addr)))
-    {
-        printf("# bind for send socket failed\n");
+        printf("# bind failed\n");
         return TRANSPORT_ERROR;
     }
 
-    #ifdef TRANSPORT_LOGS
-    printf("> UDP sender socket initialized on port %d\n", channel->local_udp_port);
-    #endif
+    if (0 == strlen(channel->remote_ip)) // AGENT
+    {
+        #ifdef TRANSPORT_LOGS
+        printf("> Agent locator initialized on port %d\n", channel->local_udp_port);
+        #endif
+
+    }
+    else // CLIENT
+    {
+        channel->remote_addr.sin_port = htons(channel->remote_udp_port);
+        if (0 >= inet_pton(AF_INET, channel->remote_ip, &channel->remote_addr.sin_addr))
+        {
+            printf("# inet_aton() failed\n");
+            return TRANSPORT_ERROR;
+        }
+
+        #ifdef TRANSPORT_LOGS
+        printf("> Client initialized on port %d\n", channel->local_udp_port);
+        #endif
+    }
 
     return TRANSPORT_OK;
 
@@ -239,7 +216,7 @@ int open_udp(udp_channel_t* channel)
     printf("> UDP channel opened\n");
     #endif
     channel->open = true;
-    g_poll_fds[channel->idx].fd = channel->recv_socket_fd;
+    g_poll_fds[channel->idx].fd = channel->socket_fd;
     g_poll_fds[channel->idx].events = POLLIN;
     return TRANSPORT_OK;
 #endif /* __PX4_NUTTX */
@@ -256,40 +233,22 @@ int close_udp(udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
-    if (0 <= channel->send_socket_fd)
+    if (0 <= channel->socket_fd)
     {
         #ifdef TRANSPORT_LOGS
-        printf("> Close sending socket\n");
+        printf("> Close socket\n");
         #endif
 
         #ifdef _WIN32
-        shutdown(channel->send_socket_fd, SD_BOTH);
-        closesocket(channel->send_socket_fd);
+        shutdown(channel->socket_fd, SD_BOTH);
+        closesocket(channel->socket_fd);
         WSACleanup();
         #else
-        shutdown(channel->send_socket_fd, SHUT_RDWR);
-        close(channel->send_socket_fd);
+        shutdown(channel->socket_fd, SHUT_RDWR);
+        close(channel->socket_fd);
         #endif
 
-        channel->send_socket_fd = -1;
-    }
-
-    if (0 <= channel->recv_socket_fd)
-    {
-        #ifdef TRANSPORT_LOGS
-        printf("> Close reception socket\n");
-        #endif
-
-        #ifdef _WIN32
-        shutdown(channel->recv_socket_fd, SD_BOTH);
-        closesocket(channel->recv_socket_fd);
-        WSACleanup();
-        #else
-        shutdown(channel->recv_socket_fd, SHUT_RDWR);
-        close(channel->recv_socket_fd);
-        #endif
-
-        channel->recv_socket_fd = -1;
+        channel->socket_fd = -1;
     }
 
     channel->open = false;
@@ -314,19 +273,20 @@ int read_udp(void *buffer, const size_t len, udp_channel_t* channel)
     // TODO: for several channels this can be optimized
     int ret = 0;
     #ifdef _WIN32
-    int addrlen = sizeof(channel->remote_recv_addr);
+    int addrlen = sizeof(channel->remote_addr);
     int r = WSAPoll(g_poll_fds, g_num_channels, channel->poll_ms);
     #else
-    static socklen_t addrlen = sizeof(channel->remote_recv_addr);
+    static socklen_t addrlen = sizeof(channel->remote_addr);
     int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
     #endif
 
     if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
     {
-        ret = recvfrom(channel->recv_socket_fd, buffer, len, 0, (struct sockaddr *) &channel->remote_recv_addr, &addrlen);
+        ret = recvfrom(channel->socket_fd, buffer, len, 0, (struct sockaddr *) &channel->remote_addr, &addrlen);
     }
 
     return ret;
+
 #endif /* __PX4_NUTTX */
 
     return TRANSPORT_ERROR;
@@ -383,13 +343,13 @@ int write_udp(const void* buffer, const size_t len, udp_channel_t* channel)
         return TRANSPORT_ERROR;
     }
 
-    if (0 == channel->remote_send_addr.sin_addr.s_addr)
+    if (0 == channel->remote_addr.sin_addr.s_addr)
     {
         printf("# Error write UDP channel, do not exist a send address\n");
         return TRANSPORT_ERROR;
     }
 
-    return sendto(channel->send_socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_send_addr, sizeof(channel->remote_send_addr));
+    return sendto(channel->socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
 
 #endif /* __PX4_NUTTX */
 

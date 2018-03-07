@@ -1,4 +1,4 @@
-// Copyright 2017 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     octet_t buffer[256];
     int len = 0;
 
-    locator_id_t loc_id = add_udp_locator(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), argv[4]);
+    locator_id_t loc_id = add_udp_locator_for_client(atoi(argv[1]), atoi(argv[2]), argv[3]);
 
     int loops = 0;
     while (++loops <= 1000)
