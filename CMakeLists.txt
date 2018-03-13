@@ -48,6 +48,7 @@ set(PROJECT_MICRO_VERSION 0)
 set(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_MICRO_VERSION})
 message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
+
 ###############################################################################
 # Default shared libraries
 ###############################################################################
@@ -56,16 +57,13 @@ message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 # unless the library was explicitly added as a static library.
 option(BUILD_SHARED_LIBS "Create shared libraries by default" OFF)
 
+
 ###############################################################################
 
 # Config
 ###############################################################################
-# Project specific options
-set(MAX_MESSAGE_SIZE 512 CACHE STRING "Define maximum message size to be used")
+include(${PROJECT_SOURCE_DIR}/cmake/defines/compiling_time_defines.cmake)
 
-configure_file(${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/config.h.in
-               ${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}/config.h
-               )
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
 ###############################################################################

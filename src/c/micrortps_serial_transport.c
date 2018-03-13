@@ -29,15 +29,15 @@ uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(uint8_t const *buffer, size_t len);
 int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
-locator_id_t create_serial (const char* device, locator_id_t locator_id);
-int          destroy_serial(const locator_id_t locator_id);
+locator_id_t create_serial (const char* device, locator_id_t locator_id, serial_channel_t* channel);
+int          remove_serial (const locator_id_t locator_id);
 int          open_serial   (serial_channel_t* channel);
 int          close_serial  (serial_channel_t* channel);
 int          send_serial   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
 
 serial_channel_t* get_serial_channel(const locator_id_t locator_id);
-int read_serial(void *buffer, const size_t len, serial_channel_t* channel);
+int read_serial(serial_channel_t* channel);
 int write_serial(const void* buffer, const size_t len, serial_channel_t* channel);
 
 serial_channel_t* get_serial_channel(const locator_id_t locator_id)
@@ -59,22 +59,17 @@ serial_channel_t* get_serial_channel(const locator_id_t locator_id)
 #endif
 }
 
-locator_id_t create_serial(const char* device, locator_id_t loc_id)
+locator_id_t create_serial(const char* device, locator_id_t loc_id, serial_channel_t* channel)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
-    if (NULL == device || MAX_NUM_CHANNELS <= g_num_channels)
+    if (NULL == device || NULL == channel || MAX_NUM_CHANNELS <= g_num_channels)
     {
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* channel = malloc(sizeof(serial_channel_t));
-    if (NULL == channel)
-    {
-        return TRANSPORT_ERROR;
-    }
-
+    // Fill channel struct
     memset(channel->rx_buffer.buffer, 0, RX_BUFFER_LENGTH);
     channel->rx_buffer.buff_pos = 0;
     memcpy(channel->uart_name, device, UART_NAME_MAX_LENGTH);
@@ -99,11 +94,12 @@ locator_id_t create_serial(const char* device, locator_id_t loc_id)
 #endif
 }
 
-int destroy_serial(const locator_id_t loc_id)
+int remove_serial(const locator_id_t loc_id)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
+
     serial_channel_t* channel = get_serial_channel(loc_id);
     if (NULL == channel)
     {
@@ -115,9 +111,9 @@ int destroy_serial(const locator_id_t loc_id)
         close_serial(channel);
     }
     g_channels[channel->idx] = NULL;
-    free(channel);
 
     return TRANSPORT_OK;
+
 #endif
 }
 
@@ -222,13 +218,12 @@ int close_serial(serial_channel_t* channel)
 #endif
 }
 
-int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
+int read_serial(serial_channel_t* channel)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
-    if (NULL == buffer       ||
-        NULL == channel      ||
+    if (NULL == channel      ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
@@ -239,7 +234,9 @@ int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
     int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
     if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
     {
-        ret = read(channel->uart_fd, buffer, len);
+        ret = read(channel->uart_fd,
+                   (void *) (channel->rx_buffer.buffer + channel->rx_buffer.buff_pos), // buffer pos
+                   sizeof(channel->rx_buffer.buffer) - channel->rx_buffer.buff_pos);   // len
     }
 
     return ret;
@@ -247,25 +244,27 @@ int read_serial(void *buffer, const size_t len, serial_channel_t* channel)
 }
 
 
-int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t loc_id)
+int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
+
     if (NULL == out_buffer)
     {
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* channel = get_serial_channel(loc_id);
-    if (NULL == channel      ||
+    serial_channel_t* channel = get_serial_channel(locator_id);
+    if (NULL == channel ||
         (!channel->open && 0 > open_serial(channel)))
     {
         return TRANSPORT_ERROR;
     }
 
-    int len = read_serial((void *) (channel->rx_buffer.buffer + channel->rx_buffer.buff_pos),
-                           sizeof(channel->rx_buffer.buffer) - channel->rx_buffer.buff_pos, channel);
+    channel->poll_ms = timeout_ms;
+
+    int len = read_serial(channel);
     if (len <= 0)
     {
         int errsv = errno;
@@ -275,10 +274,14 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
             printf("Read fail %d\n", errsv);
         }
     }
+    else
+    {
+        // We read some bytes, trying extract a whole message
+        channel->rx_buffer.buff_pos += len;
+    }
 
-    // We read some bytes, trying extract a whole message
-    if (0 < len) channel->rx_buffer.buff_pos += len;
     return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
+
 #endif
 }
 
@@ -287,6 +290,7 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
+
     if (NULL == buffer       ||
         NULL == channel      ||
         (!channel->open && 0 > open_serial(channel)))
@@ -295,6 +299,7 @@ int write_serial(const void* buffer, const size_t len, serial_channel_t* channel
     }
 
     return write(channel->uart_fd, buffer, len);
+
 #endif
 }
 
@@ -303,6 +308,7 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
+
     if (NULL == in_buffer)
     {
         return TRANSPORT_ERROR;
@@ -328,5 +334,6 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
     }
 
     return len; // only payload, + sizeof(header); for real size.
+
 #endif
 }

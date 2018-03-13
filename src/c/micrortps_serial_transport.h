@@ -15,19 +15,19 @@
 #ifndef _MICRORTPS_SERIAL_TRANSPORT_H_
 #define _MICRORTPS_SERIAL_TRANSPORT_H_
 
-#include <transport/micrortps_transport_common.h>
+#include <transport/micrortps_transport_common_priv.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-locator_id_t create_serial (const char* device, locator_id_t locator_id);
-int          destroy_serial(const locator_id_t locator_id);
+locator_id_t create_serial (const char* device, locator_id_t locator_id, serial_channel_t* channel);
+int          remove_serial (const locator_id_t locator_id);
 int          open_serial   (serial_channel_t* channel);
 int          close_serial  (serial_channel_t* channel);
 int          send_serial   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
 
 serial_channel_t* get_serial_channel(const locator_id_t locator_id);
 

@@ -18,17 +18,36 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+
+void fill_ip(char* ip_char, uint8_t* ip)
+{
+    char* aux = ip_char;
+    char* dot = NULL;//strchr(ip_char, '.');
+    ip[0] = strtoul (aux, &dot, 10);
+    aux = dot + 1;
+    ip[1] = strtoul (aux, &dot, 10);
+    aux = dot + 1;
+    ip[2] = strtoul (aux, &dot, 10);
+    aux = dot + 1;
+    ip[3] = strtoul (aux, &dot, 10);
+    printf("IP: %hhu.%hhu.%hhu.%hhu\n", ip[0], ip[1], ip[2], ip[3]);
+}
+
 
 int main(int argc, char *argv[])
 {
     printf("\nAt the very beginning everything was black\n\n");
 
-    if (argc < 2) return -1;
+    if (argc < 3) return -1;
 
     octet_t buffer[256];
     int len = 0;
-
-    locator_id_t loc_id = add_udp_locator_for_client(atoi(argv[1]), atoi(argv[2]), argv[3]);
+    MicroRTPSLocator locator;
+    uint16_t port = strtoul (argv[1], NULL, 0);
+    uint8_t ip[4] = {};
+    fill_ip(argv[2], ip);
+    locator_id_t loc_id = add_locator_udp_client(port, ip, &locator);
 
     int loops = 0;
     while (++loops <= 1000)

@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <transport/micrortps_transport_common.h>
+#include <transport/micrortps_transport_common_priv.h>
 
 #ifdef __cplusplus
 extern "C"

@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
@@ -27,8 +28,10 @@ int main(int argc, char *argv[])
 
     octet_t buffer[256];
     int len = 0;
+    MicroRTPSLocator locator;
 
-    locator_id_t loc_id = add_udp_locator_for_agent(atoi(argv[1]));
+    uint16_t port = strtoul (argv[1], NULL, 0);
+    locator_id_t loc_id = add_locator_udp_agent(port, &locator);
 
     int loops = 0;
     while (++loops <= 1000)

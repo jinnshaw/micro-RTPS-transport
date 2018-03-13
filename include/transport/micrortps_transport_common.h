@@ -16,96 +16,121 @@
 #define _MICRORTPS_TRANSPORT_COMMON_H_
 
 #include "micrortps_transport_dll.h"
-
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 
-#ifdef _WIN32
 
-#include <Winsock2.h>
-#include <Ws2tcpip.h>
-#include <WinBase.h>
-
-#else
-
-#include <unistd.h>
-#include <termios.h>
-#include <poll.h>
-
+#ifndef _WIN32
 #ifndef __PX4_NUTTX
 #include <arpa/inet.h>
-
 #endif // __PX4_NUTTX
 #endif // _WIN32
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-
-#if defined(_WIN32)
-#define __PACKED__(struct_to_pack) __pragma(pack(push, 1)) struct_to_pack __pragma(pack(pop))
-#else
-#define __PACKED__(struct_to_pack) struct_to_pack __attribute__((__packed__))
-#endif
-
 
 #define TRANSPORT_ERROR              -1
 #define TRANSPORT_OK                  0
 
-typedef unsigned char octet_t;
+#define RX_BUFFER_LENGTH           CMAKE_MAX_TRANSMISSION_UNIT_SIZE
+#define UART_NAME_MAX_LENGTH          64
+#define IP_LENGTH                      4
+
 typedef int16_t locator_id_t;
+typedef unsigned char octet_t;
 
-__PACKED__( struct Header
+
+/**********************************************************************************************************************/
+/****************************** CAUTION: CODE COPIED FROM xrce_protocol_spec.h ****************************************/
+/**********************************************************************************************************************/
+
+
+typedef struct String_t
 {
-    char marker[3];
-    octet_t payload_len_h;
-    octet_t payload_len_l;
-    octet_t crc_h;
-    octet_t crc_l;
-});
+    uint32_t size;
+    char* data;
 
-typedef struct Header header_t;
+} String_t;
+
+
+typedef enum TransportLocatorFormat
+{
+    ADDRESS_FORMAT_SMALL = 0,
+    ADDRESS_FORMAT_MEDIUM = 1,
+    ADDRESS_FORMAT_LARGE = 2,
+    ADDRESS_FORMAT_STRING = 3
+
+} TransportLocatorFormat;
+
+
+typedef struct TransportLocatorSmall
+{
+    uint8_t address[2];
+    uint16_t locator_port;
+
+} TransportLocatorSmall;
+
+
+typedef struct TransportLocatorMedium
+{
+    uint8_t address[4];
+    uint16_t locator_port;
+
+} TransportLocatorMedium;
+
+
+typedef struct TransportLocatorLarge
+{
+    uint8_t address[16];
+    uint16_t locator_port;
+
+} TransportLocatorLarge;
+
+
+typedef struct TransportLocatorString
+{
+    char value[CMAKE_MAX_STRING_SIZE];
+
+} TransportLocatorString;
+
+
+typedef union TransportLocatorU
+{
+    TransportLocatorSmall small_locator;
+    TransportLocatorMedium medium_locator;
+    TransportLocatorLarge large_locator;
+    TransportLocatorString string_locator;
+
+} TransportLocatorU;
+
+
+typedef struct TransportLocator
+{
+    uint8_t format;
+    TransportLocatorU _;
+
+} TransportLocator;
+
+
+typedef struct TransportLocatorSeq
+{
+    uint32_t size;
+    TransportLocator* data;
+
+} TransportLocatorSeq;
+
+
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+/**********************************************************************************************************************/
+
 
 typedef enum Kind
 {
     LOC_NONE,
     LOC_SERIAL,
-    LOC_UDP,
+    LOC_UDP_AGENT,
+    LOC_UDP_CLIENT
 
 } locator_kind_t;
-
-__PACKED__( struct Locator
-{
-    locator_id_t id;
-    locator_kind_t kind;
-    octet_t data[16];
-});
-
-typedef struct Locator locator_t;
-
-__PACKED__( struct Locator_id_plus
-{
-    locator_id_t id;
-    locator_kind_t kind;
-});
-
-typedef struct Locator_id_plus locator_id_plus_t;
-
-/// Serial transport
-
-#define DFLT_UART             "/dev/ttyACM0"
-#define DFLT_BAUDRATE            115200
-#define DFLT_POLL_MS                 20
-#define RX_BUFFER_LENGTH      MAX_TRANSPORT_MESSAGE_SIZE
-#define UART_NAME_MAX_LENGTH         64
-#define IP_MAX_LENGTH                16
-#define MAX_NUM_CHANNELS              8
-#define MAX_NUM_LOCATORS              8
-#define MAX_PENDING_CONNECTIONS      10
 
 typedef struct
 {
@@ -128,10 +153,6 @@ typedef struct
 
 } serial_channel_t;
 
-/// UDP transport
-
-#define DFLT_UDP_PORT               2019
-
 
 typedef struct
 {
@@ -152,7 +173,7 @@ typedef struct
     struct sockaddr_in remote_addr;
 #endif
 
-    char remote_ip[IP_MAX_LENGTH];
+    uint8_t remote_ip[IP_LENGTH];
     uint32_t poll_ms;
 
     uint8_t locator_id;
@@ -162,9 +183,29 @@ typedef struct
 } udp_channel_t;
 
 
-uint16_t crc16_byte(uint16_t crc, const uint8_t data);
-uint16_t crc16(uint8_t const *buffer, size_t len);
-void print_buffer(const uint8_t* buffer, const size_t len);
+typedef union TransportChannelU
+{
+    serial_channel_t serial;
+    udp_channel_t udp;
+
+} TransportChannelU;
+
+
+typedef struct TransportChannel
+{
+    uint8_t kind;
+    TransportChannelU _;
+
+} TransportChannel;
+
+
+typedef struct MicroRTPSLocator
+{
+    TransportLocator public;
+    TransportChannel private;
+
+} MicroRTPSLocator;
+
 DLLEXPORT void ms_sleep(int milliseconds);
 
 #ifdef __cplusplus
