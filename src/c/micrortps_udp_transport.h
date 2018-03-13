@@ -15,7 +15,7 @@
 #ifndef _MICRORTPS_UDP_TRANSPORT_H_
 #define _MICRORTPS_UDP_TRANSPORT_H_
 
-#include <transport/micrortps_transport_common_priv.h>
+#include "micrortps_transport_common_priv.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -15,7 +15,7 @@
 #ifndef _MICRORTPS_TRANSPORT_DLL_H_
 #define _MICRORTPS_TRANSPORT_DLL_H_
 
-#include <transport/config.h>
+#include <micrortps/transport/config.h>
 
 
 #if defined(_WIN32)

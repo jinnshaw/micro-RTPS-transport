@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <transport/micrortps_transport_common_priv.h>
+#include "micrortps_transport_common_priv.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -25,7 +25,7 @@ extern "C"
 #endif
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
-uint16_t crc16(uint8_t const *buffer, size_t len);
+uint16_t crc16(const uint8_t* buffer, size_t len);
 void print_buffer(const uint8_t* buffer, const size_t len);
 void ms_sleep(int milliseconds);
 
@@ -70,7 +70,7 @@ uint16_t crc16_byte(uint16_t crc, const uint8_t data)
     return (crc >> 8) ^ crc16_table[(crc ^ data) & 0xff];
 }
 
-uint16_t crc16(uint8_t const *buffer, size_t len)
+uint16_t crc16(const uint8_t* buffer, size_t len)
 {
     uint16_t crc = 0;
 

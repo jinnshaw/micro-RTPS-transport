@@ -14,13 +14,13 @@
 
 # Project specific options
 
-set(_CMAKE_MAX_TRANSMISSION_UNIT_SIZE_ 512 CACHE STRING "Define maximum transmission unit size to be used")
+set(_CONFIG_MAX_TRANSMISSION_UNIT_SIZE_ 512 CACHE STRING "Define maximum transmission unit size to be used")
 
-set(_CMAKE_MAX_NUM_LOCATORS_ 8 CACHE STRING "Define maximum transport locators to be used")
+set(_CONFIG_MAX_NUM_LOCATORS_ 8 CACHE STRING "Define maximum transport locators to be used")
 
-set(_CMAKE_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the device name")
+set(_CONFIG_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the device name")
 
 # Create source file with these defines
-configure_file(${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/config.h.in
-               ${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}/config.h
+configure_file(${PROJECT_SOURCE_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h.in
+               ${PROJECT_BINARY_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h
                )

@@ -23,9 +23,7 @@ extern "C"
 {
 #endif
 
-
-
-DLLEXPORT locator_id_t add_locator(MicroRTPSLocator* const locator, locator_kind_t kind);
+DLLEXPORT locator_id_t add_locator(locator_kind_t kind, MicroRTPSLocator* const locator);
 
 DLLEXPORT locator_id_t add_locator_udp_agent(const uint16_t local_port,
                                              MicroRTPSLocator* const locator);
@@ -44,7 +42,8 @@ DLLEXPORT int send_data(const octet_t* in_buffer, const size_t buffer_len, const
 
 DLLEXPORT int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
-DLLEXPORT int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
+DLLEXPORT int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id,
+                                 const uint16_t timeout_ms);
 
 
 

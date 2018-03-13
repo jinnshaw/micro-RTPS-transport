@@ -15,11 +15,11 @@
 #ifndef _MICRORTPS_TRANSPORT_COMMON_H_
 #define _MICRORTPS_TRANSPORT_COMMON_H_
 
+
 #include "micrortps_transport_dll.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-
 
 #ifndef _WIN32
 #ifndef __PX4_NUTTX
@@ -27,19 +27,35 @@
 #endif // __PX4_NUTTX
 #endif // _WIN32
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+
 #define TRANSPORT_ERROR              -1
 #define TRANSPORT_OK                  0
 
-#define RX_BUFFER_LENGTH           CMAKE_MAX_TRANSMISSION_UNIT_SIZE
+#define RX_BUFFER_LENGTH           CONFIG_MAX_TRANSMISSION_UNIT_SIZE
 #define UART_NAME_MAX_LENGTH          64
 #define IP_LENGTH                      4
 
 typedef int16_t locator_id_t;
+
 typedef unsigned char octet_t;
+
+typedef enum Kind
+{
+    LOC_NONE,
+    LOC_SERIAL,
+    LOC_UDP_AGENT,
+    LOC_UDP_CLIENT
+
+} locator_kind_t;
 
 
 /**********************************************************************************************************************/
-/****************************** CAUTION: CODE COPIED FROM xrce_protocol_spec.h ****************************************/
+/*************************** CAUTION: Originally placed on xrce_protocol_spec.h ***************************************/
 /**********************************************************************************************************************/
 
 
@@ -87,7 +103,7 @@ typedef struct TransportLocatorLarge
 
 typedef struct TransportLocatorString
 {
-    char value[CMAKE_MAX_STRING_SIZE];
+    char value[CONFIG_MAX_STRING_SIZE];
 
 } TransportLocatorString;
 
@@ -123,20 +139,12 @@ typedef struct TransportLocatorSeq
 /**********************************************************************************************************************/
 
 
-typedef enum Kind
-{
-    LOC_NONE,
-    LOC_SERIAL,
-    LOC_UDP_AGENT,
-    LOC_UDP_CLIENT
-
-} locator_kind_t;
-
 typedef struct
 {
     octet_t buffer[RX_BUFFER_LENGTH];
     uint16_t buff_pos;
 } buffer_t;
+
 
 typedef struct
 {
@@ -201,10 +209,11 @@ typedef struct TransportChannel
 
 typedef struct MicroRTPSLocator
 {
-    TransportLocator public;
-    TransportChannel private;
+    TransportLocator public_;
+    TransportChannel private_;
 
 } MicroRTPSLocator;
+
 
 DLLEXPORT void ms_sleep(int milliseconds);
 

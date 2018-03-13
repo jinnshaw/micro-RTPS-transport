@@ -15,8 +15,8 @@
 #ifndef _MICRORTPS_TRANSPORT_COMMON_PRIV_H_
 #define _MICRORTPS_TRANSPORT_COMMON_PRIV_H_
 
-#include "micrortps_transport_common.h"
-#include "micrortps_transport_dll.h"
+#include <micrortps/transport/micrortps_transport_common.h>
+#include <micrortps/transport/micrortps_transport_dll.h>
 
 #include <string.h>
 
@@ -79,18 +79,17 @@ __PACKED__( struct Locator_id_plus
 typedef struct Locator_id_plus locator_id_plus_t;
 
 #define DFLT_UDP_PORT               2019
-#define DFLT_UART             "/dev/ttyACM0"
+#define DFLT_UART                 "/dev/ttyACM0"
 #define DFLT_BAUDRATE             115200
 #define DFLT_POLL_MS                  20
-#define MAX_NUM_LOCATORS           CMAKE_MAX_NUM_LOCATORS // value in cmake/defines/compiling_time_defines.cmake
-#define MAX_NUM_CHANNELS           CMAKE_MAX_NUM_LOCATORS
+#define MAX_NUM_LOCATORS          CONFIG_MAX_NUM_LOCATORS
+#define MAX_NUM_CHANNELS          CONFIG_MAX_NUM_LOCATORS
 #define MAX_PENDING_CONNECTIONS       10
 
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
-uint16_t crc16(uint8_t const *buffer, size_t len);
+uint16_t crc16(const uint8_t* buffer, size_t len);
 void print_buffer(const uint8_t* buffer, const size_t len);
-
 
 #ifdef __cplusplus
 }

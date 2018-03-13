@@ -26,7 +26,7 @@ static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
 #endif
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
-uint16_t crc16(uint8_t const *buffer, size_t len);
+uint16_t crc16(const uint8_t* buffer, size_t len);
 int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
 locator_id_t create_serial (const char* device, locator_id_t locator_id, serial_channel_t* channel);

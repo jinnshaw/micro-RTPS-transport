@@ -18,7 +18,7 @@
 
 #include "micrortps_serial_transport.h"
 #include "micrortps_udp_transport.h"
-#include <transport/micrortps_transport.h>
+#include <micrortps/transport/micrortps_transport.h>
 
 static locator_id_t g_loc_counter = 0;
 static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];
@@ -49,9 +49,9 @@ uint8_t init_locator_udp_agent(const uint16_t local_port, MicroRTPSLocator* cons
     }
 
     memset(locator, 0, sizeof(MicroRTPSLocator));
-    locator->public.format = ADDRESS_FORMAT_MEDIUM;
-    locator->public._.medium_locator.locator_port = local_port;
-    locator->private.kind = LOC_UDP_AGENT;
+    locator->public_.format = ADDRESS_FORMAT_MEDIUM;
+    locator->public_._.medium_locator.locator_port = local_port;
+    locator->private_.kind = LOC_UDP_AGENT;
 
     return TRANSPORT_OK;
 }
@@ -66,11 +66,11 @@ uint8_t init_locator_udp_client(const uint16_t remote_port, const uint8_t* addre
     }
 
     memset(locator, 0, sizeof(MicroRTPSLocator));
-    locator->public.format = ADDRESS_FORMAT_MEDIUM;
-    locator->public._.medium_locator.locator_port = remote_port;
-    memcpy(locator->public._.medium_locator.address, address, sizeof(locator->public._.medium_locator.address));
+    locator->public_.format = ADDRESS_FORMAT_MEDIUM;
+    locator->public_._.medium_locator.locator_port = remote_port;
+    memcpy(locator->public_._.medium_locator.address, address, sizeof(locator->public_._.medium_locator.address));
 
-    locator->private.kind = LOC_UDP_CLIENT;
+    locator->private_.kind = LOC_UDP_CLIENT;
 
     return TRANSPORT_OK;
 }
@@ -84,17 +84,17 @@ uint8_t init_locator_serial(const char* device, MicroRTPSLocator* const locator)
         return TRANSPORT_ERROR;
     }
 
-    if (strlen(device) + 1 > sizeof(locator->public._.string_locator.value))
+    if (strlen(device) + 1 > sizeof(locator->public_._.string_locator.value))
     {
         printf("# init_locator_serial(): error, device name too large\n");
         return TRANSPORT_ERROR;
     }
 
     memset(locator, 0, sizeof(MicroRTPSLocator));
-    locator->public.format = ADDRESS_FORMAT_STRING;
-    strcpy(locator->public._.string_locator.value, device);
+    locator->public_.format = ADDRESS_FORMAT_STRING;
+    strcpy(locator->public_._.string_locator.value, device);
 
-    locator->private.kind = LOC_SERIAL;
+    locator->private_.kind = LOC_SERIAL;
 
     return TRANSPORT_OK;
 }
@@ -114,7 +114,7 @@ locator_id_t add_udp_locator(const uint16_t local_udp_port,
                                  remote_udp_port,
                                  remote_ip,
                                  ++g_loc_counter,
-                                 &(locator->private._.udp));
+                                 &(locator->private_._.udp));
     if (0 >= id)
     {
         --g_loc_counter;
@@ -122,7 +122,7 @@ locator_id_t add_udp_locator(const uint16_t local_udp_port,
     }
 
     g_loc_ids[g_loc_counter - 1].id = id;
-    g_loc_ids[g_loc_counter - 1].kind = locator->private.kind;
+    g_loc_ids[g_loc_counter - 1].kind = locator->private_.kind;
 
     return id;
 }
@@ -135,7 +135,7 @@ locator_id_t add_init_locator_udp_agent(MicroRTPSLocator* const locator)
         return TRANSPORT_ERROR;
     }
 
-    return add_udp_locator(locator->public._.medium_locator.locator_port,
+    return add_udp_locator(locator->public_._.medium_locator.locator_port,
                            0,
                            NULL,
                            locator);
@@ -167,8 +167,8 @@ locator_id_t add_init_locator_udp_client(MicroRTPSLocator* const locator)
     }
 
     return add_udp_locator(0,
-                           locator->public._.medium_locator.locator_port,
-                           locator->public._.medium_locator.address,
+                           locator->public_._.medium_locator.locator_port,
+                           locator->public_._.medium_locator.address,
                            locator);
 }
 
@@ -199,9 +199,9 @@ locator_id_t add_init_locator_serial(MicroRTPSLocator* locator)
         return TRANSPORT_ERROR;
     }
 
-    locator_id_t id = create_serial(locator->public._.string_locator.value,
+    locator_id_t id = create_serial(locator->public_._.string_locator.value,
                                     ++g_loc_counter,
-                                    &(locator->private._.serial));
+                                    &(locator->private_._.serial));
 
     if (0 > id)
     {
@@ -238,7 +238,7 @@ locator_id_t add_locator_serial(const char* device, MicroRTPSLocator* locator)
 }
 
 
-locator_id_t add_locator(MicroRTPSLocator* const locator, locator_kind_t kind)
+locator_id_t add_locator(locator_kind_t kind, MicroRTPSLocator* const locator)
 {
     if (NULL == locator)
     {

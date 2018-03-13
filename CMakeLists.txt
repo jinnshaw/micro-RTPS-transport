@@ -36,9 +36,21 @@ else()
         )
 endif()
 
+###############################################################################
+# Product information                                                         #
+###############################################################################
+
 project(transport)
 
+# Set product name
+if(DEFINED PRODUCT_NAME)
+    set(PRODUCT_NAME ${PRODUCT_NAME} CACHE STRING "Choose the product name in which this project is included")
+else()
+    set(PRODUCT_NAME micrortps CACHE STRING "Choose the product name in which this project is included")
+endif()
+
 set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
+
 ###############################################################################
 # Version information                                                         #
 ###############################################################################
@@ -98,14 +110,14 @@ if(MSVC OR MSVC_IDE)
     # Export symbols in DLL libraries
     target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_NAME_UPPER}_DYN_LINK)
 
-    # Define public headers
+    # Define public_ headers
     target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:include>
         )
 
-    # Define public headers for static library
+    # Define public_ headers for static library
     target_include_directories(${PROJECT_NAME}_static PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
@@ -124,7 +136,7 @@ else()
     set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
     set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_MAJOR_VERSION})
 
-    # Define public headers
+    # Define public_ headers
     target_include_directories(
         ${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -164,17 +176,18 @@ endif()
 ###############################################################################
 # Packaging
 ###############################################################################
-# Install public headers
+# Install public_ headers
 include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
-set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PROJECT_NAME}
+set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PRODUCT_NAME}
     DESTINATION ${INCLUDE_INSTALL_DIR}
     COMPONENT headers
     )
 
 # Install config.h header
-set_public_header(${PROJECT_BINARY_DIR}/include ${PROJECT_NAME} config.h
-    DESTINATION ${INCLUDE_INSTALL_DIR}/${PROJECT_NAME}
+set_public_header(${PROJECT_BINARY_DIR}/include ${PRODUCT_NAME}/${PROJECT_NAME} config.h
+    DESTINATION ${INCLUDE_INSTALL_DIR}/${PRODUCT_NAME}/${PROJECT_NAME}
     COMPONENT headers
+    INSTALL
     )
 
 install(TARGETS ${PROJECT_LIBRARY_NAME}
