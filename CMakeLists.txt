@@ -58,6 +58,7 @@ message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 option(BUILD_SHARED_LIBS "Create shared libraries by default" OFF)
 
 
+
 ###############################################################################
 
 # Config
