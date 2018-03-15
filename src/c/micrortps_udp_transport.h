@@ -22,16 +22,19 @@ extern "C"
 {
 #endif
 
-locator_id_t create_udp (uint16_t local_udp_port,
-                         uint16_t remote_udp_port, const uint8_t* remote_ip,
-                         locator_id_t locator_id, udp_channel_t* channel);
-int          remove_udp (const locator_id_t locator_id);
-int          open_udp   (udp_channel_t* channel);
-int          close_udp  (udp_channel_t* channel);
-int          send_udp   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
 
-udp_channel_t* get_udp_channel(const locator_id_t locator_id);
+locator_id_t         create_udp_locator (uint16_t local_udp_port,
+                                         uint16_t remote_udp_port, const uint8_t* remote_ip,
+                                         locator_id_t locator_id, micrortps_locator_t* const locator);
+int                  remove_udp_locator (const locator_id_t locator_id);
+int                  open_udp_locator   (micrortps_locator_t* const locator);
+int                  close_udp_locator  (micrortps_locator_t* const locator);
+int                  send_udp           (const header_t* header, const octet_t* in_buffer, const size_t length,
+                                         const locator_id_t locator_id);
+int                  receive_udp        (octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id,
+                                         const uint16_t timeout_ms);
+micrortps_locator_t* get_udp_channel    (const locator_id_t locator_id);
+
 
 #ifdef __cplusplus
 }

@@ -32,15 +32,39 @@
 #include <termios.h>
 #include <poll.h>
 
-#ifndef __PX4_NUTTX
+#ifdef UDP_ENABLED
+
 #include <arpa/inet.h>
 
-#endif // __PX4_NUTTX
+#endif // UDP_ENABLED
+
 #endif // _WIN32
+
+
+#define DFLT_UDP_PORT               2019
+#define DFLT_UART                 "/dev/ttyACM0"
+#define DFLT_BAUDRATE             115200
+#define DFLT_POLL_MS                  20
+#define MAX_NUM_LOCATORS          CONFIG_MAX_NUM_LOCATORS
+#define MAX_PENDING_CONNECTIONS       10
+
+
 
 #ifdef __cplusplus
 extern "C"
 {
+#endif
+
+
+
+uint16_t crc16_byte(uint16_t crc, const uint8_t data);
+uint16_t crc16(const uint8_t* buffer, size_t len);
+void print_buffer(const uint8_t* buffer, const size_t len);
+
+
+
+#ifdef __cplusplus
+}
 #endif
 
 #if defined(_WIN32)
@@ -78,21 +102,5 @@ __PACKED__( struct Locator_id_plus
 
 typedef struct Locator_id_plus locator_id_plus_t;
 
-#define DFLT_UDP_PORT               2019
-#define DFLT_UART                 "/dev/ttyACM0"
-#define DFLT_BAUDRATE             115200
-#define DFLT_POLL_MS                  20
-#define MAX_NUM_LOCATORS          CONFIG_MAX_NUM_LOCATORS
-#define MAX_NUM_CHANNELS          CONFIG_MAX_NUM_LOCATORS
-#define MAX_PENDING_CONNECTIONS       10
-
-
-uint16_t crc16_byte(uint16_t crc, const uint8_t data);
-uint16_t crc16(const uint8_t* buffer, size_t len);
-void print_buffer(const uint8_t* buffer, const size_t len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

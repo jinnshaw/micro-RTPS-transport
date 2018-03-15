@@ -24,3 +24,7 @@ set(_CONFIG_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the
 configure_file(${PROJECT_SOURCE_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h.in
                ${PROJECT_BINARY_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h
                )
+
+if(NOT __PX4_NUTTX)
+    add_definitions(-DUDP_ENABLED)
+endif()

@@ -15,7 +15,7 @@
 #ifndef _MICRORTPS_TRANSPORT_H_
 #define _MICRORTPS_TRANSPORT_H_
 
-#include "micrortps_transport_common.h"
+#include <micrortps/transport/micrortps_transport_common.h>
 
 
 #ifdef __cplusplus
@@ -23,16 +23,20 @@ extern "C"
 {
 #endif
 
-DLLEXPORT locator_id_t add_locator(locator_kind_t kind, MicroRTPSLocator* const locator);
+//DLLEXPORT locator_id_t add_locator(micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_locator_udp_agent(const uint16_t local_port,
-                                             MicroRTPSLocator* const locator);
+DLLEXPORT locator_id_t add_udp_locator(const uint16_t local_udp_port,
+                                       const uint16_t remote_udp_port, const uint8_t* remote_ip,
+                                       micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_locator_udp_client(const uint16_t remote_port, const uint8_t* remote_ip,
-                                              MicroRTPSLocator* const locator);
+DLLEXPORT locator_id_t add_udp_locator_agent(const uint16_t local_port,
+                                             micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_locator_serial(const char* device,
-                                          MicroRTPSLocator* const locator);
+DLLEXPORT locator_id_t add_udp_locator_client(const uint16_t remote_port, const uint8_t* remote_ip,
+                                              micrortps_locator_t* const locator);
+
+DLLEXPORT locator_id_t add_serial_locator(const char* device,
+                                          micrortps_locator_t* const locator);
 
 
 

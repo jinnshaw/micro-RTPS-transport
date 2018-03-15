@@ -22,10 +22,18 @@
 #include <stdbool.h>
 
 #ifndef _WIN32
-#ifndef __PX4_NUTTX
+#ifdef UDP_ENABLED
 #include <arpa/inet.h>
-#endif // __PX4_NUTTX
+#endif // UDP_ENABLED
 #endif // _WIN32
+
+
+#define TRANSPORT_ERROR            -1
+#define TRANSPORT_OK                0
+#define RX_BUFFER_LENGTH              CONFIG_MAX_TRANSMISSION_UNIT_SIZE
+#define UART_NAME_MAX_LENGTH          CONFIG_MAX_STRING_SIZE
+#define IPV4_LENGTH                 4
+
 
 #ifdef __cplusplus
 extern "C"
@@ -33,18 +41,21 @@ extern "C"
 #endif
 
 
-#define TRANSPORT_ERROR              -1
-#define TRANSPORT_OK                  0
 
-#define RX_BUFFER_LENGTH           CONFIG_MAX_TRANSMISSION_UNIT_SIZE
-#define UART_NAME_MAX_LENGTH          64
-#define IP_LENGTH                      4
+DLLEXPORT void ms_sleep(int milliseconds);
+
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 typedef int16_t locator_id_t;
 
-typedef unsigned char octet_t;
+typedef uint8_t octet_t;
 
-typedef enum Kind
+typedef enum LocatorKind
 {
     LOC_NONE,
     LOC_SERIAL,
@@ -53,119 +64,25 @@ typedef enum Kind
 
 } locator_kind_t;
 
-
-/**********************************************************************************************************************/
-/*************************** CAUTION: Originally placed on xrce_protocol_spec.h ***************************************/
-/**********************************************************************************************************************/
-
-
-typedef struct String_t
-{
-    uint32_t size;
-    char* data;
-
-} String_t;
-
-
-typedef enum TransportLocatorFormat
-{
-    ADDRESS_FORMAT_SMALL = 0,
-    ADDRESS_FORMAT_MEDIUM = 1,
-    ADDRESS_FORMAT_LARGE = 2,
-    ADDRESS_FORMAT_STRING = 3
-
-} TransportLocatorFormat;
-
-
-typedef struct TransportLocatorSmall
-{
-    uint8_t address[2];
-    uint16_t locator_port;
-
-} TransportLocatorSmall;
-
-
-typedef struct TransportLocatorMedium
-{
-    uint8_t address[4];
-    uint16_t locator_port;
-
-} TransportLocatorMedium;
-
-
-typedef struct TransportLocatorLarge
-{
-    uint8_t address[16];
-    uint16_t locator_port;
-
-} TransportLocatorLarge;
-
-
-typedef struct TransportLocatorString
-{
-    char value[CONFIG_MAX_STRING_SIZE];
-
-} TransportLocatorString;
-
-
-typedef union TransportLocatorU
-{
-    TransportLocatorSmall small_locator;
-    TransportLocatorMedium medium_locator;
-    TransportLocatorLarge large_locator;
-    TransportLocatorString string_locator;
-
-} TransportLocatorU;
-
-
-typedef struct TransportLocator
-{
-    uint8_t format;
-    TransportLocatorU _;
-
-} TransportLocator;
-
-
-typedef struct TransportLocatorSeq
-{
-    uint32_t size;
-    TransportLocator* data;
-
-} TransportLocatorSeq;
-
-
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-/**********************************************************************************************************************/
-
-
 typedef struct
 {
     octet_t buffer[RX_BUFFER_LENGTH];
     uint16_t buff_pos;
+
 } buffer_t;
 
 
 typedef struct
 {
-    buffer_t rx_buffer;
-
-    char uart_name[UART_NAME_MAX_LENGTH];
     int uart_fd;
+    char uart_name[UART_NAME_MAX_LENGTH];
     uint32_t baudrate;
-    uint32_t poll_ms;
-
-    uint8_t locator_id;
-    uint8_t idx;
-    bool open;
 
 } serial_channel_t;
 
 
 typedef struct
 {
-    buffer_t rx_buffer;
-
 #ifdef _WIN32
     SOCKET socket_fd;
 #else
@@ -175,18 +92,10 @@ typedef struct
     uint16_t local_udp_port;
     uint16_t remote_udp_port;
 
-
-#ifndef __PX4_NUTTX
+#ifdef UDP_ENABLED
     struct sockaddr_in local_addr;
     struct sockaddr_in remote_addr;
 #endif
-
-    uint8_t remote_ip[IP_LENGTH];
-    uint32_t poll_ms;
-
-    uint8_t locator_id;
-    uint8_t idx;
-    bool open;
 
 } udp_channel_t;
 
@@ -196,29 +105,27 @@ typedef union TransportChannelU
     serial_channel_t serial;
     udp_channel_t udp;
 
-} TransportChannelU;
+} transport_channel_u_t;
 
 
 typedef struct TransportChannel
 {
-    uint8_t kind;
-    TransportChannelU _;
+    locator_kind_t kind;
+    transport_channel_u_t _;
 
-} TransportChannel;
+} transport_channel_t;
 
 
-typedef struct MicroRTPSLocator
+typedef struct micrortps_locator_t
 {
-    TransportLocator public_;
-    TransportChannel private_;
+    buffer_t rx_buffer;
+    uint8_t locator_id;
+    uint8_t idx;
+    bool open;
+    uint32_t poll_ms;
 
-} MicroRTPSLocator;
+    transport_channel_t channel;
 
-
-DLLEXPORT void ms_sleep(int milliseconds);
-
-#ifdef __cplusplus
-}
-#endif
+} micrortps_locator_t;
 
 #endif

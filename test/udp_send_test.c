@@ -43,11 +43,11 @@ int main(int argc, char *argv[])
 
     octet_t buffer[256];
     int len = 0;
-    MicroRTPSLocator locator;
+    micrortps_locator_t locator;
     uint16_t port = strtoul (argv[1], NULL, 0);
     uint8_t ip[4] = {};
     fill_ip(argv[2], ip);
-    locator_id_t loc_id = add_locator_udp_client(port, ip, &locator);
+    locator_id_t loc_id = add_udp_locator_client(port, ip, &locator);
 
     int loops = 0;
     while (++loops <= 1000)

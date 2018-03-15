@@ -18,114 +18,153 @@
 
 #include "micrortps_serial_transport.h"
 
-static serial_channel_t* g_channels[MAX_NUM_CHANNELS];
-static uint8_t g_num_channels = 0;
+static micrortps_locator_t* g_serial_locators[MAX_NUM_LOCATORS] = {};
+static uint8_t g_num_locators = 0;
 
 #ifndef _WIN32
-static struct pollfd g_poll_fds[MAX_NUM_CHANNELS] = {};
-#endif
+
+static struct pollfd g_poll_fds[MAX_NUM_LOCATORS] = {};
+
+#endif // _WIN32
+
+
+/// extern function declarations
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(const uint8_t* buffer, size_t len);
 int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
 
-locator_id_t create_serial (const char* device, locator_id_t locator_id, serial_channel_t* channel);
-int          remove_serial (const locator_id_t locator_id);
-int          open_serial   (serial_channel_t* channel);
-int          close_serial  (serial_channel_t* channel);
-int          send_serial   (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
-int          receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
 
-serial_channel_t* get_serial_channel(const locator_id_t locator_id);
-int read_serial(serial_channel_t* channel);
-int write_serial(const void* buffer, const size_t len, serial_channel_t* channel);
+/// local function declarations
 
-serial_channel_t* get_serial_channel(const locator_id_t locator_id)
+locator_id_t         create_serial_locator (const char* device, locator_id_t locator_id, micrortps_locator_t* const locator);
+int                  remove_serial_locator (const locator_id_t locator_id);
+int                  open_serial_locator   (micrortps_locator_t* const locator);
+int                  close_serial_locator  (micrortps_locator_t* const locator);
+int                  write_serial          (const void* buffer, const size_t len, micrortps_locator_t* const locator);
+int                  read_serial           (micrortps_locator_t* const channel);
+int                  send_serial           (const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id);
+int                  receive_serial        (octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
+micrortps_locator_t* get_serial_locator    (const locator_id_t locator_id);
+
+
+/// function definition
+
+micrortps_locator_t* get_serial_locator(const locator_id_t locator_id)
 {
-    serial_channel_t* ret = NULL;
+    micrortps_locator_t* ret = NULL;
+
 #ifdef _WIN32
+
     return ret;
+
 #else
-    for (int i = 0; i < g_num_channels; ++i)
+
+    for (int i = 0; i < g_num_locators; ++i)
     {
-        if (NULL != g_channels[i] &&
-            g_channels[i]->locator_id == locator_id)
+        if (NULL != g_serial_locators[i] &&
+            g_serial_locators[i]->locator_id == locator_id)
         {
-            ret = g_channels[i];
+            ret = g_serial_locators[i];
             break;
         }
     }
+
     return ret;
+
 #endif
 }
 
-locator_id_t create_serial(const char* device, locator_id_t loc_id, serial_channel_t* channel)
+
+locator_id_t create_serial_locator(const char* device, locator_id_t loc_id, micrortps_locator_t* const locator)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
-    if (NULL == device || NULL == channel || MAX_NUM_CHANNELS <= g_num_channels)
+
+    if (NULL == device || 0 == strlen(device) || UART_NAME_MAX_LENGTH <= strlen(device) ||
+        NULL == locator || MAX_NUM_LOCATORS <= g_num_locators)
     {
+        printf("# create_serial_locator() -> BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
-    // Fill channel struct
-    memset(channel->rx_buffer.buffer, 0, RX_BUFFER_LENGTH);
-    channel->rx_buffer.buff_pos = 0;
+
+    /// Fill locator struct
+
+    memset(locator, 0, sizeof(micrortps_locator_t));
+    locator->rx_buffer.buff_pos = 0;
+    locator->open = false;
+    locator->poll_ms = DFLT_POLL_MS;
+    locator->channel.kind = LOC_SERIAL;
+    serial_channel_t* channel = &locator->channel._.serial;
     memcpy(channel->uart_name, device, UART_NAME_MAX_LENGTH);
     channel->uart_fd = -1;
     channel->baudrate = DFLT_BAUDRATE;
-    channel->poll_ms = DFLT_POLL_MS;
-    channel->open = false;
 
-    for (int i = 0; i < MAX_NUM_CHANNELS; ++i)
+    locator->locator_id = -1;
+    for (int i = 0; i < MAX_NUM_LOCATORS; ++i)
     {
-        if (NULL == g_channels[i])
+        if (NULL == g_serial_locators[i])
         {
-            channel->locator_id = loc_id;
-            channel->idx = i;
-            g_channels[i] = channel;
-            ++g_num_channels;
+            locator->locator_id = loc_id;
+            locator->idx = i;
+            g_serial_locators[i] = locator;
+            ++g_num_locators;
             break;
         }
     }
 
-    return channel->locator_id;
+    #ifdef TRANSPORT_LOGS
+    printf("> Create serial locator id: %d\n", locator->locator_id);
+    #endif // TRANSPORT_LOGS
+
+    return locator->locator_id;
+
 #endif
 }
 
-int remove_serial(const locator_id_t loc_id)
+int remove_serial_locator(const locator_id_t loc_id)
 {
 #ifdef _WIN32
     return TRANSPORT_ERROR;
 #else
 
-    serial_channel_t* channel = get_serial_channel(loc_id);
-    if (NULL == channel)
+    micrortps_locator_t* locator = get_serial_locator(loc_id);
+    if (NULL == locator)
     {
         return TRANSPORT_ERROR;
     }
 
-    if (channel->open)
+    if (locator->open)
     {
-        close_serial(channel);
+        close_serial_locator(locator);
     }
-    g_channels[channel->idx] = NULL;
+    g_serial_locators[locator->idx] = NULL;
 
     return TRANSPORT_OK;
 
 #endif
 }
 
-int open_serial(serial_channel_t* channel)
+int open_serial_locator(micrortps_locator_t* const locator)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
-    if (NULL == channel)
+
+    if (NULL == locator)
     {
         return TRANSPORT_ERROR;
     }
+
+    serial_channel_t* channel = &locator->channel._.serial;
 
     // Open a serial port
     channel->uart_fd = open(channel->uart_name, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -144,7 +183,7 @@ int open_serial(serial_channel_t* channel)
     {
         int errno_bkp = errno;
         printf("ERR GET CONF %s: %d (%d)\n", channel->uart_name, termios_state, errno);
-        close_serial(channel);
+        close_serial_locator(locator);
         return -errno_bkp;
     }
 
@@ -159,7 +198,7 @@ int open_serial(serial_channel_t* channel)
         {
             int errno_bkp = errno;
             printf("ERR SET BAUD %s: %d (%d)\n", channel->uart_name, termios_state, errno);
-            close_serial(channel);
+            close_serial_locator(locator);
             return -errno_bkp;
         }
     }
@@ -168,7 +207,7 @@ int open_serial(serial_channel_t* channel)
     {
         int errno_bkp = errno;
         printf("ERR SET CONF %s (%d)\n", channel->uart_name, errno);
-        close_serial(channel);
+        close_serial_locator(locator);
         return -errno_bkp;
     }
 
@@ -190,81 +229,109 @@ int open_serial(serial_channel_t* channel)
         printf("no flush\n");
     }
 
-    channel->open = true;
-    g_poll_fds[channel->idx].fd = channel->uart_fd;
-    g_poll_fds[channel->idx].events = POLLIN;
+    locator->open = true;
+    g_poll_fds[locator->idx].fd = channel->uart_fd;
+    g_poll_fds[locator->idx].events = POLLIN;
 
     return channel->uart_fd;
+
 #endif
 }
 
-int close_serial(serial_channel_t* channel)
+int close_serial_locator(micrortps_locator_t* const locator)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
-    if (NULL == channel || 0 > channel->uart_fd)
+
+    if (NULL == locator)
     {
+        printf("# close_serial_locator() -> BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
-    printf("Close UART\n");
-    close(channel->uart_fd);
-    channel->uart_fd = -1;
-    channel->open = false;
-    memset(&g_poll_fds[channel->idx], 0, sizeof(struct pollfd));
+    serial_channel_t* channel = &locator->channel._.serial;
 
-    return 0;
+    if (0 != close(channel->uart_fd))
+    {
+        printf("# close_serial_locator() -> close error\n");
+        return TRANSPORT_ERROR;
+    }
+
+    channel->uart_fd = -1;
+    locator->open = false;
+    memset(&g_poll_fds[locator->idx], 0, sizeof(struct pollfd));
+
+    #ifdef TRANSPORT_LOGS
+    printf("> Close UART %s\n", locator->channel._.serial.uart_name);
+    #endif // TRANSPORT_LOGS
+
+    return TRANSPORT_OK;
+
 #endif
 }
 
-int read_serial(serial_channel_t* channel)
+int read_serial(micrortps_locator_t* const locator)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
-    if (NULL == channel      ||
-        (!channel->open && 0 > open_serial(channel)))
+
+    if (NULL == locator ||
+        (!locator->open && 0 > open_serial_locator(locator)))
     {
+        printf("# read_serial() -> BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
     // TODO: for several channels this can be optimized
     int ret = 0;
-    int r = poll(g_poll_fds, g_num_channels, channel->poll_ms);
-    if (r > 0 && (g_poll_fds[channel->idx].revents & POLLIN))
+    int r = poll(g_poll_fds, g_num_locators, locator->poll_ms);
+    if (r > 0 && (g_poll_fds[locator->idx].revents & POLLIN))
     {
-        ret = read(channel->uart_fd,
-                   (void *) (channel->rx_buffer.buffer + channel->rx_buffer.buff_pos), // buffer pos
-                   sizeof(channel->rx_buffer.buffer) - channel->rx_buffer.buff_pos);   // len
+        ret = read(locator->channel._.serial.uart_fd,
+                   (void *) (locator->rx_buffer.buffer + locator->rx_buffer.buff_pos), // buffer pos
+                   sizeof(locator->rx_buffer.buffer) - locator->rx_buffer.buff_pos);   // len
     }
 
     return ret;
+
 #endif
 }
 
 
 int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
 
     if (NULL == out_buffer)
     {
+        printf("# receive_serial() -> BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* channel = get_serial_channel(locator_id);
-    if (NULL == channel ||
-        (!channel->open && 0 > open_serial(channel)))
+    micrortps_locator_t* locator = get_serial_locator(locator_id);
+    if (NULL == locator ||
+        (!locator->open && 0 > open_serial_locator(locator)))
     {
+        printf("# receive_serial() -> error, serial not open\n");
         return TRANSPORT_ERROR;
     }
 
-    channel->poll_ms = timeout_ms;
+    locator->poll_ms = timeout_ms;
 
-    int len = read_serial(channel);
+    int len = read_serial(locator);
     if (len <= 0)
     {
         int errsv = errno;
@@ -277,36 +344,43 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
     else
     {
         // We read some bytes, trying extract a whole message
-        channel->rx_buffer.buff_pos += len;
+        locator->rx_buffer.buff_pos += len;
     }
 
-    return extract_message(out_buffer, buffer_len, &channel->rx_buffer);
+    return extract_message(out_buffer, buffer_len, &locator->rx_buffer);
 
 #endif
 }
 
-int write_serial(const void* buffer, const size_t len, serial_channel_t* channel)
+int write_serial(const void* buffer, const size_t len, micrortps_locator_t* const locator)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
 
     if (NULL == buffer       ||
-        NULL == channel      ||
-        (!channel->open && 0 > open_serial(channel)))
+        NULL == locator      ||
+        (!locator->open && 0 > open_serial_locator(locator)))
     {
+        printf("# write_serial() -> BAD PARAMETERS!\n");
         return TRANSPORT_ERROR;
     }
 
-    return write(channel->uart_fd, buffer, len);
+    return write(locator->channel._.serial.uart_fd, buffer, len);
 
 #endif
 }
 
-int send_serial(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t loc_id)
+int send_serial(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id)
 {
+
 #ifdef _WIN32
+
     return TRANSPORT_ERROR;
+
 #else
 
     if (NULL == in_buffer)
@@ -314,20 +388,21 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
         return TRANSPORT_ERROR;
     }
 
-    serial_channel_t* channel = get_serial_channel(loc_id);
-    if (NULL == channel      ||
-        (!channel->open && 0 > open_serial(channel)))
+    micrortps_locator_t* locator = get_serial_locator(locator_id);
+    if (NULL == locator      ||
+        (!locator->open && 0 > open_serial_locator(locator)))
     {
+        printf("# send_serial() -> error, serial not open\n");
         return TRANSPORT_ERROR;
     }
 
-    int len = write_serial(header, sizeof(header_t), channel);
+    int len = write_serial(header, sizeof(header_t), locator);
     if (len != sizeof(header_t))
     {
         return len;
     }
 
-    len = write_serial(in_buffer, length, channel);
+    len = write_serial(in_buffer, length, locator);
     if (len != length)
     {
         return len;

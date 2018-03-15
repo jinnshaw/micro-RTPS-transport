@@ -187,7 +187,6 @@ set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PRODUCT_NAME}
 set_public_header(${PROJECT_BINARY_DIR}/include ${PRODUCT_NAME}/${PROJECT_NAME} config.h
     DESTINATION ${INCLUDE_INSTALL_DIR}/${PRODUCT_NAME}/${PROJECT_NAME}
     COMPONENT headers
-    INSTALL
     )
 
 install(TARGETS ${PROJECT_LIBRARY_NAME}
