@@ -65,7 +65,7 @@ locator_id_t add_udp_locator(const uint16_t local_udp_port,
     if (NULL == locator)
     {
         printf("# add_udp_locator(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     locator_id_t id = create_udp_locator(local_udp_port,
@@ -92,7 +92,7 @@ locator_id_t add_udp_locator_agent(const uint16_t local_port, micrortps_locator_
     if (NULL == locator)
     {
         printf("# add_udp_locator_agent(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     return add_udp_locator(local_port, 0, NULL, locator);
@@ -105,7 +105,7 @@ locator_id_t add_udp_locator_client(const uint16_t remote_port, const uint8_t* r
     if (NULL == locator || NULL == remote_ip)
     {
         printf("# add_udp_locator_client(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     return add_udp_locator(0, remote_port, remote_ip, locator);
@@ -117,7 +117,7 @@ locator_id_t add_serial_locator(const char* device, micrortps_locator_t* const l
     if (NULL == device || 0 == strlen(device) || NULL ==  locator)
     {
         printf("# add_serial_locator(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     locator_id_t id = create_serial_locator(device,
@@ -142,7 +142,7 @@ locator_id_t add_serial_locator(const char* device, micrortps_locator_t* const l
     if (NULL == locator)
     {
         printf("# add_locator_for_client(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     switch (locator->channel.kind)
@@ -155,7 +155,7 @@ locator_id_t add_serial_locator(const char* device, micrortps_locator_t* const l
         break;
     }
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }*/
 
 
@@ -168,11 +168,11 @@ int remove_locator(const locator_id_t locator_id)
         case LOC_UDP_AGENT:
         case LOC_UDP_CLIENT: ret = remove_udp_locator   (locator_id); break;
 
-        default:             return TRANSPORT_ERROR;
+        default:             return MICRORTPS_TRANSPORT_ERROR;
     }
 
     // Remove reference
-    if (TRANSPORT_OK == ret)
+    if (MICRORTPS_TRANSPORT_OK == ret)
     {
         for (uint8_t i = 0; i < g_loc_counter; ++i)
         {
@@ -193,7 +193,7 @@ int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_i
     if (NULL == in_buffer)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     static header_t header =
@@ -220,7 +220,7 @@ int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_i
         case LOC_UDP_AGENT:
         case LOC_UDP_CLIENT: return send_udp   (&header, in_buffer, buffer_len, locator_id);
 
-        default:         return TRANSPORT_ERROR;
+        default:         return MICRORTPS_TRANSPORT_ERROR;
     }
 }
 
@@ -230,7 +230,7 @@ int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locat
     if (NULL == out_buffer)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     switch (get_kind(locator_id))
@@ -239,7 +239,7 @@ int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locat
         case LOC_UDP_AGENT:
         case LOC_UDP_CLIENT: return receive_udp   (out_buffer, buffer_len, locator_id, timeout_ms);
 
-        default:             return TRANSPORT_ERROR;
+        default:             return MICRORTPS_TRANSPORT_ERROR;
     }
 }
 
@@ -255,7 +255,7 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
     if (NULL == out_buffer || NULL == internal_buffer)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     octet_t* rx_buffer = internal_buffer->buffer;
@@ -287,7 +287,7 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
         // All we've checked so far is garbage, drop it - but save unchecked bytes
         memmove(rx_buffer, rx_buffer + msg_start_pos, (*rx_buff_pos) - msg_start_pos);
         (*rx_buff_pos) = (*rx_buff_pos) - msg_start_pos;
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     /*
@@ -325,7 +325,7 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
     {
         printf("BAD CRC %u != %u\n", read_crc, calc_crc);
         printf("                                 (↓ %lu)\n", (unsigned long) (header_size + payload_len));
-        ret = TRANSPORT_ERROR;
+        ret = MICRORTPS_TRANSPORT_ERROR;
 
     }
     else

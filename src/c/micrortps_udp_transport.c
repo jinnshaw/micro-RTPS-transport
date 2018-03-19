@@ -86,7 +86,7 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
          0 >= loc_id || NULL == locator || MAX_NUM_LOCATORS <= g_num_locators)
     {
         printf("# create_udp_locator() -> BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     /// Fill locator struct
@@ -137,7 +137,7 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int init_udp_locator(micrortps_locator_t* const locator)
@@ -147,7 +147,7 @@ int init_udp_locator(micrortps_locator_t* const locator)
     if (NULL == locator)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = &locator->channel._.udp;
@@ -158,7 +158,7 @@ int init_udp_locator(micrortps_locator_t* const locator)
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
         printf("Failed initialising Winsock, error code: %d\n",WSAGetLastError());
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
 #endif
@@ -166,7 +166,7 @@ int init_udp_locator(micrortps_locator_t* const locator)
     if (0 > (channel->socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
     {
         printf("# create socket failed\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     if (0 == channel->remote_addr.sin_addr.s_addr) // AGENT
@@ -174,7 +174,7 @@ int init_udp_locator(micrortps_locator_t* const locator)
         if (0 > bind(channel->socket_fd, (struct sockaddr *)&channel->local_addr, sizeof(channel->local_addr)))
         {
             printf("# bind failed, socket_fd: '%d' port: '%u'\n", channel->socket_fd, channel->local_udp_port);
-            return TRANSPORT_ERROR;
+            return MICRORTPS_TRANSPORT_ERROR;
         }
 
         #ifdef TRANSPORT_LOGS
@@ -188,11 +188,11 @@ int init_udp_locator(micrortps_locator_t* const locator)
         #endif
     }
 
-    return TRANSPORT_OK;
+    return MICRORTPS_TRANSPORT_OK;
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int remove_udp_locator(const locator_id_t loc_id)
@@ -202,7 +202,7 @@ int remove_udp_locator(const locator_id_t loc_id)
     micrortps_locator_t* locator = get_udp_locator(loc_id);
     if (NULL == locator)
     {
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     if (locator->open)
@@ -211,11 +211,11 @@ int remove_udp_locator(const locator_id_t loc_id)
     }
     g_udp_locators[locator->idx] = NULL;
 
-    return TRANSPORT_OK;
+    return MICRORTPS_TRANSPORT_OK;
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int open_udp_locator(micrortps_locator_t* const locator)
@@ -225,7 +225,7 @@ int open_udp_locator(micrortps_locator_t* const locator)
     if (NULL == locator || 0 > init_udp_locator(locator))
     {
         printf("# open_udp() -> BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     #ifdef TRANSPORT_LOGS
@@ -235,11 +235,11 @@ int open_udp_locator(micrortps_locator_t* const locator)
     locator->open = true;
     g_poll_fds[locator->idx].fd = locator->channel._.udp.socket_fd;
     g_poll_fds[locator->idx].events = POLLIN | POLLPRI;
-    return TRANSPORT_OK;
+    return MICRORTPS_TRANSPORT_OK;
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int close_udp_locator(micrortps_locator_t* const locator)
@@ -249,7 +249,7 @@ int close_udp_locator(micrortps_locator_t* const locator)
     if (NULL == locator)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = &locator->channel._.udp;
@@ -274,11 +274,11 @@ int close_udp_locator(micrortps_locator_t* const locator)
 
     locator->open = false;
     memset(&g_poll_fds[locator->idx], 0, sizeof(struct pollfd));
-    return TRANSPORT_OK;
+    return MICRORTPS_TRANSPORT_OK;
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int read_udp(micrortps_locator_t* const locator)
@@ -289,7 +289,7 @@ int read_udp(micrortps_locator_t* const locator)
         (!locator->open && 0 > open_udp_locator(locator)))
     {
         printf("# Error read UDP channel\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = &locator->channel._.udp;
@@ -318,7 +318,7 @@ int read_udp(micrortps_locator_t* const locator)
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 
@@ -329,14 +329,14 @@ int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t
     if (NULL == out_buffer)
     {
         printf("# receive_udp(): BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     micrortps_locator_t* locator = get_udp_locator(locator_id);
     if (NULL == locator ||
         (!locator->open && 0 > open_udp_locator(locator)))
     {
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     locator->poll_ms = timeout_ms;
@@ -361,7 +361,7 @@ int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int write_udp(const void* buffer, const size_t len, micrortps_locator_t* const locator)
@@ -373,21 +373,21 @@ int write_udp(const void* buffer, const size_t len, micrortps_locator_t* const l
         (!locator->open && 0 > open_udp_locator(locator)))
     {
         printf("# Error write UDP channel\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     udp_channel_t* channel = &locator->channel._.udp;
     if (0 == channel->remote_addr.sin_addr.s_addr)
     {
         printf("# Error write UDP channel, do not exist a send address\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     return sendto(channel->socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }
 
 int send_udp(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id)
@@ -397,7 +397,7 @@ int send_udp(const header_t* header, const octet_t* in_buffer, const size_t leng
     if (NULL == in_buffer)
     {
         printf("# BAD PARAMETERS!\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     micrortps_locator_t* locator = get_udp_locator(locator_id);
@@ -405,7 +405,7 @@ int send_udp(const header_t* header, const octet_t* in_buffer, const size_t leng
         (!locator->open && 0 > open_udp_locator(locator)))
     {
         printf("# Error send UDP channel\n");
-        return TRANSPORT_ERROR;
+        return MICRORTPS_TRANSPORT_ERROR;
     }
 
     int len = write_udp(header, sizeof(header_t), locator);
@@ -424,5 +424,5 @@ int send_udp(const header_t* header, const octet_t* in_buffer, const size_t leng
 
 #endif // UDP_ENABLED
 
-    return TRANSPORT_ERROR;
+    return MICRORTPS_TRANSPORT_ERROR;
 }

@@ -28,8 +28,8 @@
 #endif // _WIN32
 
 
-#define TRANSPORT_ERROR            -1
-#define TRANSPORT_OK                0
+#define MICRORTPS_TRANSPORT_ERROR  -1
+#define MICRORTPS_TRANSPORT_OK      0
 #define RX_BUFFER_LENGTH              CONFIG_MAX_TRANSMISSION_UNIT_SIZE
 #define UART_NAME_MAX_LENGTH          CONFIG_MAX_STRING_SIZE
 #define IPV4_LENGTH                 4
