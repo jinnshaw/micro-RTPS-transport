@@ -82,8 +82,7 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
 {
 #ifdef UDP_ENABLED
 
-    if ((NULL != remote_ip && IPV4_LENGTH != strlen(remote_ip)) ||
-         0 >= loc_id || NULL == locator || MAX_NUM_LOCATORS <= g_num_locators)
+    if (0 >= loc_id || NULL == locator || MAX_NUM_LOCATORS <= g_num_locators)
     {
         printf("# create_udp_locator() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
