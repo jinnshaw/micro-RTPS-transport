@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+set(PROJECT_NAME transport)
 get_target_property(PROJECT_INCLUDE_FILES ${PROJECT_NAME} INCLUDE_DIRECTORIES)
 include_directories(${PROJECT_INCLUDE_FILES})
 
@@ -21,5 +21,5 @@ foreach(file ${files})
     file(GLOB TEST_SRCS "${file_name}.c")
     add_executable(${file_name} ${TEST_SRCS})
     #install(TARGETS ${file_name} DESTINATION ${CMAKE_BINARY_DIR}/install)
-	target_link_libraries(${file_name} ${PROJECT_NAME})
+    target_link_libraries(${file_name} ${PROJECT_NAME})
 endforeach()
