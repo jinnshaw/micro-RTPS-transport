@@ -18,12 +18,12 @@
 
 #include "micrortps_serial_transport.h"
 
-static micrortps_locator_t* g_serial_locators[MAX_NUM_LOCATORS] = {};
+static micrortps_locator_t* g_serial_locators[MAX_NUM_LOCATORS] = {0};
 static uint8_t g_num_locators = 0;
 
 #ifndef _WIN32
 
-static struct pollfd g_poll_fds[MAX_NUM_LOCATORS] = {};
+static struct pollfd g_poll_fds[MAX_NUM_LOCATORS] = {0};
 
 #endif // _WIN32
 

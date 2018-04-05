@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <netinet/in.h>
 
 #ifndef _WIN32
 #ifdef UDP_ENABLED
@@ -92,10 +93,8 @@ typedef struct
     uint16_t local_udp_port;
     uint16_t remote_udp_port;
 
-#ifdef UDP_ENABLED
     struct sockaddr_in local_addr;
     struct sockaddr_in remote_addr;
-#endif
 
 } udp_channel_t;
 

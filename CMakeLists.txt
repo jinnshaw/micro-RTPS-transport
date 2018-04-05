@@ -82,6 +82,9 @@ include(${PROJECT_SOURCE_DIR}/cmake/defines/compiling_time_defines.cmake)
 ###############################################################################
 # Warning level
 ###############################################################################
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wcast-align")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wcast-align --std=c++11")
+
 if(MSVC OR MSVC_IDE)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
