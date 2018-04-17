@@ -20,7 +20,6 @@
 #include "micrortps_udp_transport.h"
 #include <micrortps/transport/micrortps_transport.h>
 
-
 // global variables
 
 static locator_id_t g_loc_counter = 0;
@@ -30,7 +29,7 @@ static locator_id_plus_t g_loc_ids[MAX_NUM_LOCATORS];
 // function declaration
 
 locator_kind_t get_kind(const locator_id_t locator_id);
-int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
+int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* internal_buffer);
 
 locator_id_t add_udp_locator(const uint16_t local_udp_port, const uint16_t remote_udp_port, const uint8_t* remote_ip, micrortps_locator_t* const locator);
 locator_id_t add_udp_locator_agent(const uint16_t local_port, micrortps_locator_t* const locator);
@@ -41,8 +40,6 @@ int remove_locator(const locator_id_t locator_id);
 int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
 int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id, const uint16_t timeout_ms);
 int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
-int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer);
-
 
 // function definition
 
@@ -250,7 +247,7 @@ int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_
 }
 
 
-int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* internal_buffer)
+int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* internal_buffer)
 {
     if (NULL == out_buffer || NULL == internal_buffer)
     {
@@ -262,7 +259,7 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
     uint16_t* rx_buff_pos = &(internal_buffer->buff_pos);
 
     // We read some
-    size_t header_size = sizeof(header_t);
+    uint16_t header_size = (uint16_t)sizeof(header_t);
 
     // but not enough
     if ((*rx_buff_pos) < header_size)
@@ -270,7 +267,7 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
         return 0;
     }
 
-    uint32_t msg_start_pos = 0;
+    uint16_t msg_start_pos = 0;
 
     for (msg_start_pos = 0; msg_start_pos <= (*rx_buff_pos) - header_size; ++msg_start_pos)
     {
@@ -295,10 +292,10 @@ int extract_message(octet_t* out_buffer, const size_t buffer_len, buffer_t* inte
      */
 
     header_t* header = (header_t*) &rx_buffer[msg_start_pos];
-    uint32_t payload_len = ((uint32_t) header->payload_len_h << 8) | header->payload_len_l;
+    uint16_t payload_len = ((uint16_t) header->payload_len_h << 8) | header->payload_len_l;
 
     // The message won't fit the buffer.
-    if (buffer_len < header_size + payload_len)
+    if ((uint16_t)buffer_len < header_size + payload_len)
     {
         return -EMSGSIZE;
     }

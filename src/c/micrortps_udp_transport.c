@@ -70,9 +70,11 @@ micrortps_locator_t* get_udp_locator(const locator_id_t locator_id)
     }
     return ret;
 
-#endif // UDP_ENABLED
+#else
 
     return NULL;
+
+#endif // UDP_ENABLED
 }
 
 
@@ -97,7 +99,11 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
     locator->channel.kind = LOC_UDP_AGENT;
 
     udp_channel_t* channel = &locator->channel._.udp;
+#ifdef _WIN32
+    channel->socket_fd = INVALID_SOCKET;
+#else
     channel->socket_fd = -1;
+#endif
 
     // local
     channel->local_udp_port = local_udp_port;
@@ -115,8 +121,8 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
         channel->remote_addr.sin_port = htons(channel->remote_udp_port);
     }
 
-    locator->locator_id = -1;
-    for (int i = 0; i < MAX_NUM_LOCATORS; ++i)
+    locator->locator_id = (uint8_t)~0;
+    for (uint8_t i = 0; i < MAX_NUM_LOCATORS; ++i)
     {
         if (NULL == g_udp_locators[i])
         {
@@ -134,9 +140,11 @@ locator_id_t create_udp_locator(uint16_t local_udp_port,
 
     return locator->locator_id;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int init_udp_locator(micrortps_locator_t* const locator)
@@ -162,7 +170,12 @@ int init_udp_locator(micrortps_locator_t* const locator)
 
 #endif
 
-    if (0 > (channel->socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+#ifdef _WIN32
+    if (INVALID_SOCKET == (channel->socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+#else
+
+    if (-1 == (channel->socket_fd = socket(AF_INET, SOCK_DGRAM, 0)))
+#endif
     {
         printf("# create socket failed\n");
         return MICRORTPS_TRANSPORT_ERROR;
@@ -172,7 +185,11 @@ int init_udp_locator(micrortps_locator_t* const locator)
     {
         if (0 > bind(channel->socket_fd, (struct sockaddr *)&channel->local_addr, sizeof(channel->local_addr)))
         {
-            printf("# bind failed, socket_fd: '%d' port: '%u'\n", channel->socket_fd, channel->local_udp_port);
+#ifdef _WIN32
+            printf("# bind failed, socket_fd: %llu port: %u\n", channel->socket_fd, channel->local_udp_port);
+#else
+            printf("# bind failed, socket_fd: %d port: %u\n", channel->socket_fd, channel->local_udp_port);
+#endif
             return MICRORTPS_TRANSPORT_ERROR;
         }
 
@@ -189,9 +206,11 @@ int init_udp_locator(micrortps_locator_t* const locator)
 
     return MICRORTPS_TRANSPORT_OK;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int remove_udp_locator(const locator_id_t loc_id)
@@ -212,9 +231,11 @@ int remove_udp_locator(const locator_id_t loc_id)
 
     return MICRORTPS_TRANSPORT_OK;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int open_udp_locator(micrortps_locator_t* const locator)
@@ -233,12 +254,14 @@ int open_udp_locator(micrortps_locator_t* const locator)
 
     locator->open = true;
     g_poll_fds[locator->idx].fd = locator->channel._.udp.socket_fd;
-    g_poll_fds[locator->idx].events = POLLIN | POLLPRI;
+    g_poll_fds[locator->idx].events = POLLIN;
     return MICRORTPS_TRANSPORT_OK;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int close_udp_locator(micrortps_locator_t* const locator)
@@ -253,31 +276,42 @@ int close_udp_locator(micrortps_locator_t* const locator)
 
     udp_channel_t* channel = &locator->channel._.udp;
 
-    if (0 <= channel->socket_fd)
+#ifdef _WIN32
+    if (INVALID_SOCKET != channel->socket_fd)
     {
         #ifdef TRANSPORT_LOGS
         printf("> Close socket\n");
         #endif
 
-        #ifdef _WIN32
         shutdown(channel->socket_fd, SD_BOTH);
         closesocket(channel->socket_fd);
         WSACleanup();
-        #else
+
+        channel->socket_fd = INVALID_SOCKET;
+    }
+#else
+    if (-1 != channel->socket_fd)
+    {
+        #ifdef TRANSPORT_LOGS
+        printf("> Close socket\n");
+        #endif
+
         shutdown(channel->socket_fd, SHUT_RDWR);
         close(channel->socket_fd);
-        #endif
 
         channel->socket_fd = -1;
     }
+#endif
 
     locator->open = false;
     memset(&g_poll_fds[locator->idx], 0, sizeof(struct pollfd));
     return MICRORTPS_TRANSPORT_OK;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int read_udp(micrortps_locator_t* const locator)
@@ -315,9 +349,11 @@ int read_udp(micrortps_locator_t* const locator)
 
     return ret;
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 
@@ -353,14 +389,16 @@ int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t
     else
     {
         // We read some bytes, trying extract a whole message
-        locator->rx_buffer.buff_pos += len;
+        locator->rx_buffer.buff_pos += (uint16_t)len;
     }
 
     return extract_message(out_buffer, buffer_len, &locator->rx_buffer);
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int write_udp(const void* buffer, const size_t len, micrortps_locator_t* const locator)
@@ -382,11 +420,17 @@ int write_udp(const void* buffer, const size_t len, micrortps_locator_t* const l
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
+#ifdef _WIN32
+    return sendto(channel->socket_fd, buffer, (int)len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
+#else
     return sendto(channel->socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
+#endif
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }
 
 int send_udp(const header_t* header, const octet_t* in_buffer, const size_t length, const locator_id_t locator_id)
@@ -414,14 +458,16 @@ int send_udp(const header_t* header, const octet_t* in_buffer, const size_t leng
     }
 
     len = write_udp(in_buffer, length, locator);
-    if (len != length)
+    if ((unsigned int)len != length)
     {
         return len;
     }
 
     return len; // only payload, + sizeof(header); for real size.
 
-#endif // UDP_ENABLED
+#else
 
     return MICRORTPS_TRANSPORT_ERROR;
+
+#endif // UDP_ENABLED
 }

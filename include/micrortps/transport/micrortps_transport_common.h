@@ -20,12 +20,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <netinet/in.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <WinSock2.h>
+#else
 #ifdef UDP_ENABLED
 #include <arpa/inet.h>
 #endif // UDP_ENABLED
+#include <netinet/in.h>
 #endif // _WIN32
 
 
@@ -52,7 +54,7 @@ DLLEXPORT void ms_sleep(int milliseconds);
 #endif
 
 
-typedef int16_t locator_id_t;
+typedef int8_t locator_id_t;
 
 typedef uint8_t octet_t;
 

@@ -26,7 +26,6 @@ extern "C"
 
 uint16_t crc16_byte(uint16_t crc, const uint8_t data);
 uint16_t crc16(const uint8_t* buffer, size_t len);
-void print_buffer(const uint8_t* buffer, const size_t len);
 void ms_sleep(int milliseconds);
 
 /** CRC table for the CRC-16. The poly is 0x8005 (x^16 + x^15 + x^2 + 1) */
@@ -80,16 +79,6 @@ uint16_t crc16(const uint8_t* buffer, size_t len)
     }
 
     return crc;
-}
-
-void print_buffer(const uint8_t* buffer, const size_t len)
-{
-    printf("=> ");
-    for (size_t i = 0; i < len; ++i)
-    {
-        printf("%c[0x%02X]", ((char*)buffer)[i], ((char*)buffer)[i]);
-    }
-    printf("\n");
 }
 
 void ms_sleep(int milliseconds)

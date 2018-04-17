@@ -78,13 +78,11 @@ option(BUILD_SHARED_LIBS "Create shared libraries by default" OFF)
 include(${PROJECT_SOURCE_DIR}/cmake/defines/compiling_time_defines.cmake)
 
 
+# Flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
-###############################################################################
-# Warning level
-###############################################################################
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wcast-align")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wcast-align --std=c++11")
 
+# Warning level
 if(MSVC OR MSVC_IDE)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -92,6 +90,7 @@ if(MSVC OR MSVC_IDE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     endif()
 else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
 endif()
 

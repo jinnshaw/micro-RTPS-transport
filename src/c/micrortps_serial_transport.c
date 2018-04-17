@@ -56,6 +56,7 @@ micrortps_locator_t* get_serial_locator(const locator_id_t locator_id)
 
 #ifdef _WIN32
 
+    (void) locator_id;
     return ret;
 
 #else
@@ -81,6 +82,9 @@ locator_id_t create_serial_locator(const char* device, locator_id_t loc_id, micr
 
 #ifdef _WIN32
 
+    (void) device;
+    (void) loc_id;
+    (void) locator;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -130,7 +134,10 @@ locator_id_t create_serial_locator(const char* device, locator_id_t loc_id, micr
 int remove_serial_locator(const locator_id_t loc_id)
 {
 #ifdef _WIN32
+
+    (void) loc_id;
     return MICRORTPS_TRANSPORT_ERROR;
+
 #else
 
     micrortps_locator_t* locator = get_serial_locator(loc_id);
@@ -155,6 +162,7 @@ int open_serial_locator(micrortps_locator_t* const locator)
 
 #ifdef _WIN32
 
+    (void) locator;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -243,6 +251,7 @@ int close_serial_locator(micrortps_locator_t* const locator)
 
 #ifdef _WIN32
 
+    (void) locator;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -279,6 +288,7 @@ int read_serial(micrortps_locator_t* const locator)
 
 #ifdef _WIN32
 
+    (void) locator;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -311,6 +321,10 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
 
 #ifdef _WIN32
 
+    (void) out_buffer;
+    (void) buffer_len;
+    (void) locator_id;
+    (void) timeout_ms;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -357,6 +371,9 @@ int write_serial(const void* buffer, const size_t len, micrortps_locator_t* cons
 
 #ifdef _WIN32
 
+    (void) buffer;
+    (void) len;
+    (void) locator;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
@@ -379,6 +396,10 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
 
 #ifdef _WIN32
 
+    (void) header;
+    (void) in_buffer;
+    (void) length;
+    (void) locator_id;
     return MICRORTPS_TRANSPORT_ERROR;
 
 #else
