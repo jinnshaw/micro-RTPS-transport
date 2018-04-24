@@ -334,7 +334,7 @@ int read_udp(micrortps_locator_t* const locator)
     int r = WSAPoll(g_poll_fds, g_num_locators, locator->poll_ms);
     #else
     static socklen_t addrlen = sizeof(channel->remote_addr);
-    int r = poll(g_poll_fds, g_num_locators, locator->poll_ms);
+    int r = poll(&g_poll_fds[locator->idx], 1, locator->poll_ms);
     #endif
 
     if (r > 0 && (g_poll_fds[locator->idx].revents & POLLIN))
@@ -383,7 +383,7 @@ int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t
 
         if (errsv && EAGAIN != errsv && ETIMEDOUT != errsv)
         {
-            printf("# Read fail %d\n", errsv);
+//            printf("# Read fail %d\n", errsv);
         }
     }
     else

@@ -352,7 +352,7 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
 
         if (errsv && EAGAIN != errsv && ETIMEDOUT != errsv)
         {
-            printf("Read fail %d\n", errsv);
+//            printf("Read fail %d\n", errsv);
         }
     }
     else
