@@ -13,15 +13,16 @@
 # limitations under the License.
 
 ###############################################################################
-# CMake build rules for micro RTPS transport
+# CMake build rules for Micro RTPS Transport
 ###############################################################################
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+
 if (${CMAKE_VERSION} VERSION_GREATER 3.0)
     cmake_policy(SET CMP0048 OLD)
 endif()
 
 set(IS_TOP_LEVEL TRUE)
-if(NOT "${PROJECT_SOURCE_DIR}" STREQUAL "")
+if(PROJECT_SOURCE_DIR)
     set(IS_TOP_LEVEL FALSE)
 endif()
 
@@ -39,8 +40,16 @@ endif()
 ###############################################################################
 # Product information                                                         #
 ###############################################################################
-
-project(transport)
+if(CMAKE_VERSION VERSION_LESS 3.0)
+    project(transport C)
+    set(PROJECT_VERION_MAYOR 0)
+    set(PROJECT_VERION_MINOR 4)
+    set(PROJECT_VERION_PATCH 0)
+    set(PROJECT_VERSION ${PROJECT_VERION_MAYOR}.${PROJECT_VERION_MINOR}.${PROJECT_VERION_PATCH})
+else()
+    cmake_policy(SET CMP0048 NEW)
+    project(transport VERSION "0.4.0" LANGUAGES C)
+endif()
 
 # Set product name
 if(DEFINED PRODUCT_NAME)
@@ -49,105 +58,109 @@ else()
     set(PRODUCT_NAME micrortps CACHE STRING "Choose the product name in which this project is included")
 endif()
 
-set(PROJECT_LIBRARY_NAME ${PROJECT_NAME})
+###############################################################################
+# eProsima build options
+###############################################################################
+option(EPROSIMA_BUILD_TESTS "Activate the building tests" OFF)
 
 ###############################################################################
-# Version information                                                         #
+# Check MSVC architecture
 ###############################################################################
-set(PROJECT_MAJOR_VERSION 1)
-set(PROJECT_MINOR_VERSION 0)
-set(PROJECT_MICRO_VERSION 0)
-set(PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_MICRO_VERSION})
-message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
-
-
-###############################################################################
-# Default shared libraries
-###############################################################################
-# Global flag to cause add_library() to create shared libraries if on.
-# If set to true, this will cause all libraries to be built shared
-# unless the library was explicitly added as a static library.
-option(BUILD_SHARED_LIBS "Create shared libraries by default" OFF)
-
-
-
-###############################################################################
-
-# Config
-###############################################################################
-include(${PROJECT_SOURCE_DIR}/cmake/defines/compiling_time_defines.cmake)
-
-
-# Flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTRANSPORT_LOGS")
-
-# Warning level
+include(${PROJECT_SOURCE_DIR}/cmake/dev/check_configuration.cmake)
 if(MSVC OR MSVC_IDE)
-    if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-        string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-    endif()
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
+    check_msvc_arch()
 endif()
+
+############################################################################### 
+# Targets
+###############################################################################
 
 # Set source files
-file(GLOB ${PROJECT_NAME}_SOURCES
-    src/c/*.c
-)
+set(SRCS
+    src/c/micrortps_transport.c
+    src/c/micrortps_transport_common.c
+    src/c/micrortps_serial_transport.c
+    src/c/micrortps_udp_transport.c
+    )
 
-# Create libraries
+#Create library
+add_library(${PROJECT_NAME} ${SRCS})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+
+# Define public_ headers
+target_include_directories(${PROJECT_NAME} 
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
+
 if(MSVC OR MSVC_IDE)
-    add_library(${PROJECT_NAME}        SHARED ${${PROJECT_NAME}_SOURCES})
-    add_library(${PROJECT_NAME}_static STATIC ${${PROJECT_NAME}_SOURCES})
-    # Rename the library to have a "lib" before.
-    set_target_properties(                ${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME            lib${PROJECT_NAME})
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELEASE_POSTFIX        -${PROJECT_VERSION})
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES RELWITHDEBINFO_POSTFIX -${PROJECT_VERSION})
-    set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_static PROPERTIES DEBUG_POSTFIX          d-${PROJECT_VERSION})
-
-    # Export symbols in DLL libraries
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ${PROJECT_NAME_UPPER}_DYN_LINK)
-
-    # Define public_ headers
-    target_include_directories(${PROJECT_NAME} PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-        )
-
-    # Define public_ headers for static library
-    target_include_directories(${PROJECT_NAME}_static PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-        )
-
-    # Link library to external win32 libraries.
-    target_link_libraries(
-        ${PROJECT_NAME} PUBLIC
-        Ws2_32 Kernel32
-        )
-
-else()
-    #Create library
-    add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
-    set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
-    set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_MAJOR_VERSION})
-
-    # Define public_ headers
-    target_include_directories(
-        ${PROJECT_NAME} PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+    # Link external libraries
+    target_link_libraries(${PROJECT_NAME} 
+        PUBLIC
+            Ws2_32 
+            Kernel32
         )
 endif()
 
+if(NOT __PX4_NUTTX)
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            -DUDP_ENABLED 
+        )
+endif()
 
+###############################################################################
+# Config
+###############################################################################
+
+# Install path
+set(BIN_INSTALL_DIR bin/ CACHE PATH "Installation directory for binaries")
+set(INCLUDE_INSTALL_DIR include/ CACHE PATH "Installation directory for C headers")
+set(LIB_INSTALL_DIR lib/ CACHE PATH "Installation directory for libraries")
+set(DATA_INSTALL_DIR share/ CACHE PATH "Installation directory for data")
+if(WIN32)
+    set(LICENSE_INSTALL_DIR . CACHE PATH "Installation directory for licenses")
+else()
+    set(LICENSE_INSTALL_DIR ${DATA_INSTALL_DIR}/${PROJECT_NAME} CACHE PATH "Installation directory for licenses")
+endif()
+
+# Project options 
+set(_CONFIG_MAX_TRANSMISSION_UNIT_SIZE_ 512 CACHE STRING "Define maximum transmission unit size to be used")
+set(_CONFIG_MAX_NUM_LOCATORS_ 8 CACHE STRING "Define maximum transport locators to be used")
+set(_CONFIG_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the device name")
+
+# Create source file with these defines
+configure_file(${PROJECT_SOURCE_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h.in
+    ${PROJECT_BINARY_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h
+    )
+
+###############################################################################
+# Compile options
+###############################################################################
+
+# Warnings
+if(MSVC OR MSVC_IDE)
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+            /W4
+            /wd4700
+            /wd4996
+            /wd4820
+            /wd4255
+            /wd4668
+        )
+else()
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+            -pedantic
+            -Wconversion
+            -Wall
+            -Wextra
+            -Wcast-align
+        )
+endif()
 
 ###############################################################################
 # Testing
@@ -163,21 +176,9 @@ if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
 endif()
 
 ###############################################################################
-# Installation paths
-###############################################################################
-set(BIN_INSTALL_DIR bin/ CACHE PATH "Installation directory for binaries")
-set(INCLUDE_INSTALL_DIR include/ CACHE PATH "Installation directory for C headers")
-set(LIB_INSTALL_DIR lib/ CACHE PATH "Installation directory for libraries")
-set(DATA_INSTALL_DIR share/ CACHE PATH "Installation directory for data")
-if(WIN32)
-    set(LICENSE_INSTALL_DIR . CACHE PATH "Installation directory for licenses")
-else()
-    set(LICENSE_INSTALL_DIR ${DATA_INSTALL_DIR}/${PROJECT_NAME} CACHE PATH "Installation directory for licenses")
-endif()
-
-###############################################################################
 # Packaging
 ###############################################################################
+
 # Install public_ headers
 include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
 set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PRODUCT_NAME}
@@ -191,19 +192,17 @@ set_public_header(${PROJECT_BINARY_DIR}/include ${PRODUCT_NAME}/${PROJECT_NAME} 
     COMPONENT headers
     )
 
-install(TARGETS ${PROJECT_LIBRARY_NAME}
-        EXPORT ${PROJECT_LIBRARY_NAME}Targets
-        RUNTIME DESTINATION ${BIN_INSTALL_DIR}
-        LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-        ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-        COMPONENT libraries
+install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+    COMPONENT libraries
+    )
+
+export(TARGETS ${PROJECT_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}Targets.cmake)
+
+install(EXPORT ${PROJECT_NAME}Targets
+    DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake
+    COMPONENT cmake
 )
-
-export(TARGETS ${PROJECT_LIBRARY_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_LIBRARY_NAME}Targets.cmake)
-
-install(EXPORT ${PROJECT_LIBRARY_NAME}Targets
-DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_LIBRARY_NAME}/cmake
-COMPONENT cmake
-)
-
-include(${PROJECT_SOURCE_DIR}/cmake/packaging/eProsimaPackaging.cmake)
