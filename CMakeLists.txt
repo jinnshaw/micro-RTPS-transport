@@ -79,7 +79,7 @@ set(SRCS
     src/c/micrortps_udp_transport.c
     )
 
-#Create library
+# Library
 add_library(${PROJECT_NAME} ${SRCS})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
