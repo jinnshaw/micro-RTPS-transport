@@ -45,7 +45,7 @@ extern "C"
 
 
 
-DLLEXPORT void ms_sleep(int milliseconds);
+transport_DllAPI void ms_sleep(int milliseconds);
 
 
 

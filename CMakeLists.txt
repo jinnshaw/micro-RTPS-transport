@@ -17,10 +17,6 @@
 ###############################################################################
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
-if (${CMAKE_VERSION} VERSION_GREATER 3.0)
-    cmake_policy(SET CMP0048 OLD)
-endif()
-
 set(IS_TOP_LEVEL TRUE)
 if(PROJECT_SOURCE_DIR)
     set(IS_TOP_LEVEL FALSE)
@@ -42,13 +38,13 @@ endif()
 ###############################################################################
 if(CMAKE_VERSION VERSION_LESS 3.0)
     project(transport C)
-    set(PROJECT_VERION_MAYOR 0)
-    set(PROJECT_VERION_MINOR 4)
+    set(PROJECT_VERION_MAYOR 1)
+    set(PROJECT_VERION_MINOR 0)
     set(PROJECT_VERION_PATCH 0)
     set(PROJECT_VERSION ${PROJECT_VERION_MAYOR}.${PROJECT_VERION_MINOR}.${PROJECT_VERION_PATCH})
 else()
     cmake_policy(SET CMP0048 NEW)
-    project(transport VERSION "0.4.0" LANGUAGES C)
+    project(transport VERSION "1.0.0" LANGUAGES C)
 endif()
 
 # Set product name
@@ -137,8 +133,17 @@ configure_file(${PROJECT_SOURCE_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/con
     )
 
 ###############################################################################
-# Compile options
+# Compile settings
 ###############################################################################
+
+# Definitions
+get_target_property(TARGET_TYPE ${PROJECT_NAME} TYPE)
+if((MSVC OR MSVC_IDE) AND (TARGET_TYPE STREQUAL "SHARED_LIBRARY"))
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            -DBUILDING_SHARED_LIB
+        )
+endif()
 
 # Warnings
 if(MSVC OR MSVC_IDE)

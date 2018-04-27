@@ -23,30 +23,30 @@ extern "C"
 {
 #endif
 
-//DLLEXPORT locator_id_t add_locator(micrortps_locator_t* const locator);
+//transport_DllAPI locator_id_t add_locator(micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_udp_locator(const uint16_t local_udp_port,
+transport_DllAPI locator_id_t add_udp_locator(const uint16_t local_udp_port,
                                        const uint16_t remote_udp_port, const uint8_t* remote_ip,
                                        micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_udp_locator_agent(const uint16_t local_port,
+transport_DllAPI locator_id_t add_udp_locator_agent(const uint16_t local_port,
                                              micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_udp_locator_client(const uint16_t remote_port, const uint8_t* remote_ip,
+transport_DllAPI locator_id_t add_udp_locator_client(const uint16_t remote_port, const uint8_t* remote_ip,
                                               micrortps_locator_t* const locator);
 
-DLLEXPORT locator_id_t add_serial_locator(const char* device,
+transport_DllAPI locator_id_t add_serial_locator(const char* device,
                                           micrortps_locator_t* const locator);
 
 
 
-DLLEXPORT int remove_locator(const locator_id_t locator_id);
+transport_DllAPI int remove_locator(const locator_id_t locator_id);
 
-DLLEXPORT int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
+transport_DllAPI int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
-DLLEXPORT int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
+transport_DllAPI int receive_data(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id);
 
-DLLEXPORT int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id,
+transport_DllAPI int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locator_id_t locator_id,
                                  const uint16_t timeout_ms);
 
 

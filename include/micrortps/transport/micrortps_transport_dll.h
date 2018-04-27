@@ -17,20 +17,18 @@
 
 #include <micrortps/transport/config.h>
 
-
 #if defined(_WIN32)
-
-//#if defined(MICRORTPS_TRANSPORT_SOURCE)
-#define DLLEXPORT __declspec( dllexport )
-//#else
-#define DLLIMPORT __declspec( dllimport )
-//#endif // MICRORTPS_TRANSPORT_SOURCE
-
+#if defined(BUILDING_SHARED_LIB)
+#if defined(transport_EXPORTS)
+#define transport_DllAPI __declspec( dllexport )
 #else
-
-#define DLLEXPORT
-#define DLLIMPORT
-
+#define transport_DllAPI __declspec( dllimport )
+#endif // transport_EXPORTS
+#else
+#define transport_DllAPI
+#endif // BUILDING_SHARED_LIBS
+#else
+#define transport_DllAPI
 #endif // _WIN32
 
 #endif // _MICRORTPS_TRANSPORT_DLL_H_
