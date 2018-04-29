@@ -208,8 +208,8 @@ int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_i
     uint16_t crc = crc16(in_buffer, buffer_len);
     header.payload_len_h = (buffer_len >> 8) & 0xff;
     header.payload_len_l = buffer_len & 0xff;
-    header.crc_h = (crc >> 8) & 0xff;
-    header.crc_l = crc & 0xff;
+    header.crc_h = (octet_t)(crc >> 8) & 0xff;
+    header.crc_l = (octet_t)crc & 0xff;
 
     switch (get_kind(locator_id))
     {
@@ -282,8 +282,8 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
     {
         printf("                                 (↓↓ %u)\n", msg_start_pos);
         // All we've checked so far is garbage, drop it - but save unchecked bytes
-        memmove(rx_buffer, rx_buffer + msg_start_pos, (*rx_buff_pos) - msg_start_pos);
-        (*rx_buff_pos) = (*rx_buff_pos) - msg_start_pos;
+        memmove(rx_buffer, rx_buffer + msg_start_pos, (size_t)((*rx_buff_pos) - msg_start_pos));
+        (*rx_buff_pos) = (uint16_t)((*rx_buff_pos) - msg_start_pos);
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -292,7 +292,7 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
      */
 
     header_t* header = (header_t*) &rx_buffer[msg_start_pos];
-    uint16_t payload_len = ((uint16_t) header->payload_len_h << 8) | header->payload_len_l;
+    uint16_t payload_len = (uint16_t)((header->payload_len_h << 8) | header->payload_len_l);
 
     // The message won't fit the buffer.
     if ((uint16_t)buffer_len < header_size + payload_len)
@@ -307,14 +307,14 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
         if (msg_start_pos > 0)
         {
             printf("                                 (↓ %u)\n", msg_start_pos);
-            memmove(rx_buffer, rx_buffer + msg_start_pos, (*rx_buff_pos) - msg_start_pos);
-            (*rx_buff_pos) -= msg_start_pos;
+            memmove(rx_buffer, rx_buffer + msg_start_pos, (size_t)((*rx_buff_pos) - msg_start_pos));
+            (*rx_buff_pos) = (uint16_t)((*rx_buff_pos) - msg_start_pos);
         }
 
         return 0;
     }
 
-    uint16_t read_crc = ((uint16_t) header->crc_h << 8) | header->crc_l;
+    uint16_t read_crc = (uint16_t)((header->crc_h << 8) | header->crc_l);
     uint16_t calc_crc = crc16((uint8_t *) rx_buffer + msg_start_pos + header_size, payload_len);
     int ret = 0;
 
@@ -333,7 +333,7 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
     }
 
     // discard message from rx_buffer
-    (*rx_buff_pos) -= header_size + payload_len;
+    (*rx_buff_pos) = (uint16_t)((*rx_buff_pos) - header_size + payload_len);
     memmove(rx_buffer, rx_buffer + msg_start_pos + header_size + payload_len, (*rx_buff_pos));
 
     return ret;

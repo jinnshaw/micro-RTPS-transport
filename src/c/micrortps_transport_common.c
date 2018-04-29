@@ -86,7 +86,7 @@ void ms_sleep(int milliseconds)
     #ifdef _WIN32
     Sleep(milliseconds);
     #else
-    usleep(milliseconds*1000);
+    usleep((__useconds_t)(milliseconds*1000));
     #endif
 }
 

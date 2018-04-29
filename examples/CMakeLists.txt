@@ -11,15 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set(PROJECT_NAME transport)
-get_target_property(PROJECT_INCLUDE_FILES ${PROJECT_NAME} INCLUDE_DIRECTORIES)
-include_directories(${PROJECT_INCLUDE_FILES})
 
-file(GLOB_RECURSE files "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
-foreach(file ${files})
-    get_filename_component(file_name ${file} NAME_WE)
-    file(GLOB TEST_SRCS "${file_name}.c")
-    add_executable(${file_name} ${TEST_SRCS})
-    #install(TARGETS ${file_name} DESTINATION ${CMAKE_BINARY_DIR}/install)
-    target_link_libraries(${file_name} ${PROJECT_NAME})
-endforeach()
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+
+if (CMAKE_VERSION VERSION_LESS 3.0)
+    project(transport_tests C CXX)
+else()
+    cmake_policy(SET CMP0048 NEW)
+    project(transport_tests LANGUAGES C CXX)
+endif()
+
+include(${PROJECT_SOURCE_DIR}/cmake/dev/gtest.cmake)
+check_gtest()
+if(GTEST_FOUND)
+    include(CTest)
+    set(SRCS
+        UdpTest.cpp)
+    add_executable(${PROJECT_NAME} ${SRCS})
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED YES
+        )
+    add_gtest(${PROJECT_NAME} ${SRCS})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} transport ${GTEST_BOTH_LIBRARIES})
+
+    if(WIN32)
+        string(REPLACE ";" "\\;" WIN_PATH "$ENV{PATH}")
+        set_property(TEST ${PROJECT_NAME} APPEND PROPERTY ENVIRONMENT
+            "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:microcdr>>\\;${WIN_PATH}"
+    )
+    endif()
+endif()

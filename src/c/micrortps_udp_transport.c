@@ -339,12 +339,12 @@ int read_udp(micrortps_locator_t* const locator)
 
     if (r > 0 && (g_poll_fds[locator->idx].revents & POLLIN))
     {
-        ret = recvfrom(channel->socket_fd,
-                       (void *) (locator->rx_buffer.buffer + locator->rx_buffer.buff_pos),
-                       sizeof(locator->rx_buffer.buffer) - locator->rx_buffer.buff_pos,
-                       0,
-                       (struct sockaddr *) &channel->remote_addr,
-                       &addrlen);
+        ret = (int)recvfrom(channel->socket_fd,
+                            (void *) (locator->rx_buffer.buffer + locator->rx_buffer.buff_pos),
+                            sizeof(locator->rx_buffer.buffer) - locator->rx_buffer.buff_pos,
+                            0,
+                            (struct sockaddr *) &channel->remote_addr,
+                            &addrlen);
     }
 
     return ret;
@@ -389,7 +389,7 @@ int receive_udp(octet_t* out_buffer, const size_t buffer_len, const locator_id_t
     else
     {
         // We read some bytes, trying extract a whole message
-        locator->rx_buffer.buff_pos += (uint16_t)len;
+        locator->rx_buffer.buff_pos = (uint16_t)(locator->rx_buffer.buff_pos + len);
     }
 
     return extract_message(out_buffer, buffer_len, &locator->rx_buffer);
@@ -423,7 +423,7 @@ int write_udp(const void* buffer, const size_t len, micrortps_locator_t* const l
 #ifdef _WIN32
     return sendto(channel->socket_fd, buffer, (int)len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
 #else
-    return sendto(channel->socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
+    return (int)sendto(channel->socket_fd, buffer, len, 0, (struct sockaddr *)&channel->remote_addr, sizeof(channel->remote_addr));
 #endif
 
 #else

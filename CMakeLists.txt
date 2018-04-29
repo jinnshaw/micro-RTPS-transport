@@ -38,10 +38,10 @@ endif()
 ###############################################################################
 if(CMAKE_VERSION VERSION_LESS 3.0)
     project(transport C)
-    set(PROJECT_VERION_MAYOR 1)
-    set(PROJECT_VERION_MINOR 0)
-    set(PROJECT_VERION_PATCH 0)
-    set(PROJECT_VERSION ${PROJECT_VERION_MAYOR}.${PROJECT_VERION_MINOR}.${PROJECT_VERION_PATCH})
+    set(PROJECT_VERSION_MAJOR 1)
+    set(PROJECT_VERSION_MINOR 0)
+    set(PROJECT_VERSION_PATCH 0)
+    set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 else()
     cmake_policy(SET CMP0048 NEW)
     project(transport VERSION "1.0.0" LANGUAGES C)
@@ -100,13 +100,6 @@ if(MSVC OR MSVC_IDE)
         )
 endif()
 
-if(NOT __PX4_NUTTX)
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE
-            -DUDP_ENABLED 
-        )
-endif()
-
 ###############################################################################
 # Config
 ###############################################################################
@@ -144,6 +137,12 @@ if((MSVC OR MSVC_IDE) AND (TARGET_TYPE STREQUAL "SHARED_LIBRARY"))
             -DBUILDING_SHARED_LIB
         )
 endif()
+if(NOT __PX4_NUTTX)
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            -DUDP_ENABLED
+        )
+endif()
 
 # Warnings
 if(MSVC OR MSVC_IDE)
@@ -160,24 +159,21 @@ else()
     target_compile_options(${PROJECT_NAME}
         PRIVATE
             -pedantic
-            -Wconversion
+#            -Wconversion
+            -fstrict-aliasing
             -Wall
             -Wextra
             -Wcast-align
+            -Wshadow
         )
 endif()
 
 ###############################################################################
 # Testing
 ###############################################################################
-option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
-
-if(EPROSIMA_BUILD)
-    set(EPROSIMA_BUILD_TESTS ON)
-endif()
-
-if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
-    add_subdirectory(examples)
+if(EPROSIMA_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
 endif()
 
 ###############################################################################

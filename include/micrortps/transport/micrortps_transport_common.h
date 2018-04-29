@@ -33,8 +33,8 @@
 
 #define MICRORTPS_TRANSPORT_ERROR  -1
 #define MICRORTPS_TRANSPORT_OK      0
-#define RX_BUFFER_LENGTH              CONFIG_MAX_TRANSMISSION_UNIT_SIZE
-#define UART_NAME_MAX_LENGTH          CONFIG_MAX_STRING_SIZE
+#define RX_BUFFER_LENGTH            CONFIG_MAX_TRANSMISSION_UNIT_SIZE
+#define UART_NAME_MAX_LENGTH        CONFIG_MAX_STRING_SIZE
 #define IPV4_LENGTH                 4
 
 
@@ -54,7 +54,7 @@ transport_DllAPI void ms_sleep(int milliseconds);
 #endif
 
 
-typedef int8_t locator_id_t;
+typedef uint8_t locator_id_t;
 
 typedef uint8_t octet_t;
 
