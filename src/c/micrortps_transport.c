@@ -193,7 +193,7 @@ int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_i
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
-    static header_t header =
+    header_t header =
     {
         .marker = {'>', '>', '>'},
         .payload_len_h = 0u,

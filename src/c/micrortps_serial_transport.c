@@ -196,20 +196,24 @@ int open_serial_locator(micrortps_locator_t* const locator)
     }
 
     // Clear ONLCR flag (which appends a CR for every LF)
-    uart_config.c_oflag &= ~ONLCR;
+    cfsetospeed(&uart_config, (speed_t)channel->baudrate);
+    cfsetispeed(&uart_config, (speed_t)channel->baudrate);
 
-    // USB serial is indicated by /dev/ttyACM0
-    if (strcmp(channel->uart_name, "/dev/ttyACM0") != 0 && strcmp(channel->uart_name, "/dev/ttyACM1") != 0)
-    {
-        // Set baud rate
-        if (cfsetispeed(&uart_config, channel->baudrate) < 0 || cfsetospeed(&uart_config, channel->baudrate) < 0)
-        {
-            int errno_bkp = errno;
-            printf("ERR SET BAUD %s: %d (%d)\n", channel->uart_name, termios_state, errno);
-            close_serial_locator(locator);
-            return -errno_bkp;
-        }
-    }
+    uart_config.c_cflag |= (CLOCAL | CREAD);    /* ignore modem controls */
+    uart_config.c_cflag &= ~CSIZE;
+    uart_config.c_cflag |= CS8;         /* 8-bit characters */
+    uart_config.c_cflag &= ~PARENB;     /* no parity bit */
+    uart_config.c_cflag &= ~CSTOPB;     /* only need 1 stop bit */
+    uart_config.c_cflag &= ~CRTSCTS;    /* no hardware flowcontrol */
+
+    /* setup for non-canonical mode */
+    uart_config.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    uart_config.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    uart_config.c_oflag &= ~OPOST;
+
+    /* fetch bytes as they become available */
+    uart_config.c_cc[VMIN] = 1;
+    uart_config.c_cc[VTIME] = 1;
 
     if ((termios_state = tcsetattr(channel->uart_fd, TCSANOW, &uart_config)) < 0)
     {
@@ -219,23 +223,8 @@ int open_serial_locator(micrortps_locator_t* const locator)
         return -errno_bkp;
     }
 
-    char aux[64];
-    bool flush = false;
-    while (0 < read(channel->uart_fd, (void *)&aux, 64))
-    {
-        //printf("%s", aux);
-        flush = true;
-        ms_sleep(1);
-    }
-
-    if (flush)
-    {
-        printf("flush\n");
-
-    } else
-    {
-        printf("no flush\n");
-    }
+    uint8_t aux_buffer[64];
+    while (0 < read(channel->uart_fd, (void *)&aux_buffer, 64)); //clear previous data
 
     locator->open = true;
     g_poll_fds[locator->idx].fd = channel->uart_fd;

@@ -159,7 +159,7 @@ if(EPROSIMA_BUILD)
 endif()
 
 if(EPROSIMA_BUILD_TESTS AND IS_TOP_LEVEL)
-    add_subdirectory(test)
+    add_subdirectory(examples)
 endif()
 
 ###############################################################################
