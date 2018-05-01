@@ -109,8 +109,8 @@ locator_id_t create_serial_locator(const char* device, locator_id_t loc_id, micr
     channel->uart_fd = -1;
     channel->baudrate = DFLT_BAUDRATE;
 
-    locator->locator_id = (uint8_t)~0;
-    for (uint8_t i = 0; i < MAX_NUM_LOCATORS; ++i)
+    locator->locator_id = -1;
+    for (int i = 0; i < MAX_NUM_LOCATORS; ++i)
     {
         if (NULL == g_serial_locators[i])
         {
@@ -291,12 +291,12 @@ int read_serial(micrortps_locator_t* const locator)
 
     // TODO: for several channels this can be optimized
     int ret = 0;
-    int r = poll(g_poll_fds, g_num_locators, (int)locator->poll_ms);
+    int r = poll(g_poll_fds, g_num_locators, locator->poll_ms);
     if (r > 0 && (g_poll_fds[locator->idx].revents & POLLIN))
     {
-        ret = (int)read(locator->channel._.serial.uart_fd,
-                        (void *) (locator->rx_buffer.buffer + locator->rx_buffer.buff_pos), // buffer pos
-                        sizeof(locator->rx_buffer.buffer) - locator->rx_buffer.buff_pos);   // len
+        ret = read(locator->channel._.serial.uart_fd,
+                   (void *) (locator->rx_buffer.buffer + locator->rx_buffer.buff_pos), // buffer pos
+                   sizeof(locator->rx_buffer.buffer) - locator->rx_buffer.buff_pos);   // len
     }
 
     return ret;
@@ -347,7 +347,7 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
     else
     {
         // We read some bytes, trying extract a whole message
-        locator->rx_buffer.buff_pos = (uint16_t)(locator->rx_buffer.buff_pos + len);
+        locator->rx_buffer.buff_pos += len;
     }
 
     return extract_message(out_buffer, buffer_len, &locator->rx_buffer);
@@ -413,10 +413,6 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
     }
 
     len = write_serial(in_buffer, length, locator);
-//    if (len != length)
-//    {
-//        return len;
-//    }
 
     return len; // only payload, + sizeof(header); for real size.
 

@@ -54,7 +54,7 @@ transport_DllAPI void ms_sleep(int milliseconds);
 #endif
 
 
-typedef uint8_t locator_id_t;
+typedef int8_t locator_id_t;
 
 typedef uint8_t octet_t;
 
