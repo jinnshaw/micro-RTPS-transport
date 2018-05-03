@@ -331,7 +331,7 @@ int read_udp(micrortps_locator_t* const locator)
     int ret = 0;
     #ifdef _WIN32
     int addrlen = sizeof(channel->remote_addr);
-    int r = WSAPoll(g_poll_fds, g_num_locators, locator->poll_ms);
+    int r = WSAPoll(&g_poll_fds[locator->idx], 1, locator->poll_ms);
     #else
     static socklen_t addrlen = sizeof(channel->remote_addr);
     int r = poll(&g_poll_fds[locator->idx], 1, locator->poll_ms);
