@@ -25,21 +25,16 @@ include(${PROJECT_SOURCE_DIR}/cmake/dev/gtest.cmake)
 check_gtest()
 if(GTEST_FOUND)
     include(CTest)
+
     set(SRCS
-        UdpTest.cpp)
-    add_executable(${PROJECT_NAME} ${SRCS})
-    set_target_properties(${PROJECT_NAME} PROPERTIES
+        UdpTest.cpp
+        )
+    add_executable(${PROJECT_NAME}_exec ${SRCS})
+    add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME}_exec)
+    target_include_directories(${PROJECT_NAME}_exec PRIVATE ${GTEST_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME}_exec transport ${GTEST_BOTH_LIBRARIES})
+    set_target_properties(${PROJECT_NAME}_exec PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES
         )
-    add_gtest(${PROJECT_NAME} ${SRCS})
-    target_include_directories(${PROJECT_NAME} PRIVATE ${GTEST_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} transport ${GTEST_BOTH_LIBRARIES})
-
-    if(WIN32)
-        string(REPLACE ";" "\\;" WIN_PATH "$ENV{PATH}")
-        set_property(TEST ${PROJECT_NAME} APPEND PROPERTY ENVIRONMENT
-            "PATH=$<SHELL_PATH:$<TARGET_FILE_DIR:microcdr>>\\;${WIN_PATH}"
-    )
-    endif()
 endif()
