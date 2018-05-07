@@ -23,35 +23,26 @@ if(PROJECT_SOURCE_DIR)
 endif()
 
 # Set CMAKE_BUILD_TYPE to Release by default.
-if(DEFINED CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING
-        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-        )
-else()
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to 'Release' as none was specified.")
     set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-        )
+        FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 ###############################################################################
 # Product information                                                         #
 ###############################################################################
 if(CMAKE_VERSION VERSION_LESS 3.0)
-    project(transport C)
+    project(micrortps-transport C)
     set(PROJECT_VERSION_MAJOR 1)
     set(PROJECT_VERSION_MINOR 0)
     set(PROJECT_VERSION_PATCH 0)
     set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 else()
     cmake_policy(SET CMP0048 NEW)
-    project(transport VERSION "1.0.0" LANGUAGES C)
-endif()
-
-# Set product name
-if(DEFINED PRODUCT_NAME)
-    set(PRODUCT_NAME ${PRODUCT_NAME} CACHE STRING "Choose the product name in which this project is included")
-else()
-    set(PRODUCT_NAME micrortps CACHE STRING "Choose the product name in which this project is included")
+    project(micrortps-transport VERSION "1.0.0" LANGUAGES C)
 endif()
 
 ###############################################################################
@@ -94,7 +85,7 @@ target_include_directories(${PROJECT_NAME}
 if(MSVC OR MSVC_IDE)
     # Link external libraries
     target_link_libraries(${PROJECT_NAME} 
-        PUBLIC
+        PRIVATE
             Ws2_32 
             Kernel32
         )
@@ -121,8 +112,8 @@ set(_CONFIG_MAX_NUM_LOCATORS_ 8 CACHE STRING "Define maximum transport locators 
 set(_CONFIG_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the device name")
 
 # Create source file with these defines
-configure_file(${PROJECT_SOURCE_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h.in
-    ${PROJECT_BINARY_DIR}/include/${PRODUCT_NAME}/${PROJECT_NAME}/config.h
+configure_file(${PROJECT_SOURCE_DIR}/include/micrortps/transport/config.h.in
+    ${PROJECT_BINARY_DIR}/include/micrortps/transport/config.h
     )
 
 ###############################################################################
@@ -146,26 +137,9 @@ endif()
 
 # Warnings
 if(MSVC OR MSVC_IDE)
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE
-            /W4
-            /wd4700
-            /wd4996
-            /wd4820
-            /wd4255
-            /wd4668
-        )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /wd4700 /wd4996 /wd4820 /wd4255 /wd4668")
 else()
-    target_compile_options(${PROJECT_NAME}
-        PRIVATE
-            -pedantic
-#            -Wconversion
-            -fstrict-aliasing
-            -Wall
-            -Wextra
-            -Wcast-align
-            -Wshadow
-        )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic -fstrict-aliasing -Wall -Wextra -Wcast-align -Wshadow")
 endif()
 
 ###############################################################################
@@ -180,19 +154,7 @@ endif()
 # Packaging
 ###############################################################################
 
-# Install public_ headers
-include(${PROJECT_SOURCE_DIR}/cmake/dev/set_sources.cmake)
-set_public_headers_directory(${PROJECT_SOURCE_DIR}/include ${PRODUCT_NAME}
-    DESTINATION ${INCLUDE_INSTALL_DIR}
-    COMPONENT headers
-    )
-
-# Install config.h header
-set_public_header(${PROJECT_BINARY_DIR}/include ${PRODUCT_NAME}/${PROJECT_NAME} config.h
-    DESTINATION ${INCLUDE_INSTALL_DIR}/${PRODUCT_NAME}/${PROJECT_NAME}
-    COMPONENT headers
-    )
-
+# Install library
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
     RUNTIME DESTINATION ${BIN_INSTALL_DIR}
@@ -201,8 +163,19 @@ install(TARGETS ${PROJECT_NAME}
     COMPONENT libraries
     )
 
-export(TARGETS ${PROJECT_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}Targets.cmake)
+# Install includes
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/micrortps/transport/
+    DESTINATION ${INCLUDE_INSTALL_DIR}/micrortps/transport
+    FILES_MATCHING PATTERN "*.h"
+    )
 
+# Install config.h
+install(FILES ${PROJECT_BINARY_DIR}/include/micrortps/transport/config.h
+    DESTINATION ${INCLUDE_INSTALL_DIR}/micrortps/transport
+    )
+
+# Export library
+export(TARGETS ${PROJECT_NAME} FILE ${PROJECT_BINARY_DIR}/cmake/config/${PROJECT_NAME}Targets.cmake)
 install(EXPORT ${PROJECT_NAME}Targets
     DESTINATION ${LIB_INSTALL_DIR}/${PROJECT_NAME}/cmake
     COMPONENT cmake
