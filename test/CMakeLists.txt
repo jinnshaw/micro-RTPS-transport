@@ -29,9 +29,14 @@ if(GTEST_FOUND)
         UdpTest.cpp
         )
     add_executable(${PROJECT_NAME} ${SRCS})
-    add_gtest(${PROJECT_NAME} SOURCES ${SRCS})
+    add_gtest(${PROJECT_NAME} 
+        SOURCES 
+            ${SRCS}
+        DEPENDENCIES    
+            micrortps_transport
+        )
     target_include_directories(${PROJECT_NAME} PRIVATE ${GTEST_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} micrortps-transport ${GTEST_BOTH_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} micrortps_transport ${GTEST_BOTH_LIBRARIES})
     set_target_properties(${PROJECT_NAME} PROPERTIES
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED YES

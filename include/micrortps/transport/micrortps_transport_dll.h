@@ -19,7 +19,7 @@
 
 #if defined(_WIN32)
 #if defined(BUILDING_SHARED_LIB)
-#if defined(micrortps-transport_EXPORTS)
+#if defined(micrortps_transport_EXPORTS)
 #define transport_DllAPI __declspec( dllexport )
 #else
 #define transport_DllAPI __declspec( dllimport )
