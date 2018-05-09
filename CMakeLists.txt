@@ -63,7 +63,7 @@ if(MSVC OR MSVC_IDE)
     check_msvc_arch()
 endif()
 
-############################################################################### 
+###############################################################################
 # Targets
 ###############################################################################
 
@@ -80,7 +80,7 @@ add_library(${PROJECT_NAME} ${SRCS})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 # Define public_ headers
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
@@ -89,9 +89,9 @@ target_include_directories(${PROJECT_NAME}
 
 if(MSVC OR MSVC_IDE)
     # Link external libraries
-    target_link_libraries(${PROJECT_NAME} 
+    target_link_libraries(${PROJECT_NAME}
         PRIVATE
-            Ws2_32 
+            Ws2_32
             Kernel32
         )
 endif()
@@ -111,9 +111,9 @@ else()
     set(LICENSE_INSTALL_DIR ${DATA_INSTALL_DIR}/${PROJECT_NAME} CACHE PATH "Installation directory for licenses")
 endif()
 
-# Project options 
+# Project options
 set(_CONFIG_MAX_TRANSMISSION_UNIT_SIZE_ 512 CACHE STRING "Define maximum transmission unit size to be used")
-set(_CONFIG_MAX_NUM_LOCATORS_ 8 CACHE STRING "Define maximum transport locators to be used")
+set(_CONFIG_MAX_NUM_LOCATORS_ 16 CACHE STRING "Define maximum transport locators to be used")
 set(_CONFIG_MAX_STRING_SIZE_ 255 CACHE STRING "Define maximum size for store the device name")
 
 # Create source file with these defines
