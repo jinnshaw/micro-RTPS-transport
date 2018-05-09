@@ -18,7 +18,7 @@
 #include <micrortps/transport/config.h>
 
 #if defined(_WIN32)
-#if defined(BUILDING_SHARED_LIB)
+#if defined(micrortps_transport_SHARED)
 #if defined(micrortps_transport_EXPORTS)
 #define transport_DllAPI __declspec( dllexport )
 #else
