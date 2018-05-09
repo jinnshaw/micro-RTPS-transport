@@ -26,7 +26,7 @@ public:
     }
     void run()
     {
-        octet_t buffer[32];
+        octet_t buffer[32] ={0};
         for (uint16_t i = 0; i < MAX_NUM_ATTEMPS && running_cond_; ++i)
         {
             if (0 < receive_data_timed(buffer, sizeof(buffer), locator_.locator_id, MAX_TIMEOUT))
@@ -119,9 +119,12 @@ private:
     Server server_;
     Client client_;
 
-    const uint8_t ip_[4] = {127, 0, 0, 1};
-    const uint16_t port_ = 2019;
+    static const uint8_t ip_[4];
+    static const uint16_t port_;
 };
+
+const uint8_t UdpTest::ip_[4] = {127, 0, 0, 1};
+const uint16_t UdpTest::port_ = 2019;
 
 /****************************************************************************************
  * Tests
