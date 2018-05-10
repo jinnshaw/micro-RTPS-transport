@@ -61,7 +61,7 @@ locator_id_t add_udp_locator(const uint16_t local_udp_port,
 {
     if (NULL == locator)
     {
-        printf("# add_udp_locator(): BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# add_udp_locator(): BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -88,7 +88,7 @@ locator_id_t add_udp_locator_agent(const uint16_t local_port, micrortps_locator_
 {
     if (NULL == locator)
     {
-        printf("# add_udp_locator_agent(): BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# add_udp_locator_agent(): BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -101,7 +101,7 @@ locator_id_t add_udp_locator_client(const uint16_t remote_port, const uint8_t* r
 {
     if (NULL == locator || NULL == remote_ip)
     {
-        printf("# add_udp_locator_client(): BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# add_udp_locator_client(): BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -113,7 +113,7 @@ locator_id_t add_serial_locator(const char* device, micrortps_locator_t* const l
 {
     if (NULL == device || 0 == strlen(device) || NULL ==  locator)
     {
-        printf("# add_serial_locator(): BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# add_serial_locator(): BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -138,7 +138,7 @@ locator_id_t add_serial_locator(const char* device, micrortps_locator_t* const l
 {
     if (NULL == locator)
     {
-        printf("# add_locator_for_client(): BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# add_locator_for_client(): BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -189,7 +189,7 @@ int send_data(const octet_t* in_buffer, const size_t buffer_len, const locator_i
 {
     if (NULL == in_buffer)
     {
-        printf("# BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -226,7 +226,7 @@ int receive_data_timed(octet_t* out_buffer, const size_t buffer_len, const locat
 {
     if (NULL == out_buffer)
     {
-        printf("# BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -251,7 +251,7 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
 {
     if (NULL == out_buffer || NULL == internal_buffer)
     {
-        printf("# BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -280,7 +280,7 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
     // Start not found
     if (msg_start_pos > (*rx_buff_pos) - header_size)
     {
-        printf("                                 (↓↓ %u)\n", msg_start_pos);
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("                                 (↓↓ %u)\n", msg_start_pos);
         // All we've checked so far is garbage, drop it - but save unchecked bytes
         memmove(rx_buffer, rx_buffer + msg_start_pos, (*rx_buff_pos) - msg_start_pos);
         (*rx_buff_pos) = (*rx_buff_pos) - msg_start_pos;
@@ -306,7 +306,7 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
         // If there's garbage at the beginning, drop it
         if (msg_start_pos > 0)
         {
-            printf("                                 (↓ %u)\n", msg_start_pos);
+            MICRORTPS_TRANSPORT_PRINTF_ARGS("                                 (↓ %u)\n", msg_start_pos);
             memmove(rx_buffer, rx_buffer + msg_start_pos, (*rx_buff_pos) - msg_start_pos);
             (*rx_buff_pos) -= msg_start_pos;
         }
@@ -320,8 +320,8 @@ int extract_message(octet_t* out_buffer, const uint16_t buffer_len, buffer_t* in
 
     if (read_crc != calc_crc)
     {
-        printf("BAD CRC %u != %u\n", read_crc, calc_crc);
-        printf("                                 (↓ %lu)\n", (unsigned long) (header_size + payload_len));
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("BAD CRC %u != %u\n", read_crc, calc_crc);
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("                                 (↓ %lu)\n", (unsigned long) (header_size + payload_len));
         ret = MICRORTPS_TRANSPORT_ERROR;
 
     }

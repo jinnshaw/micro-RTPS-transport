@@ -92,7 +92,7 @@ locator_id_t create_serial_locator(const char* device, locator_id_t loc_id, micr
     if (NULL == device || 0 == strlen(device) || UART_NAME_MAX_LENGTH <= strlen(device) ||
         NULL == locator || MAX_NUM_LOCATORS <= g_num_locators)
     {
-        printf("# create_serial_locator() -> BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# create_serial_locator() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -178,7 +178,7 @@ int open_serial_locator(micrortps_locator_t* const locator)
     channel->uart_fd = open(channel->uart_name, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if (channel->uart_fd < 0)
     {
-        printf("failed to open device: %s (%d)\n", channel->uart_name, errno);
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("failed to open device: %s (%d)\n", channel->uart_name, errno);
         return -errno;
     }
 
@@ -190,7 +190,7 @@ int open_serial_locator(micrortps_locator_t* const locator)
     if ((termios_state = tcgetattr(channel->uart_fd, &uart_config)) < 0)
     {
         int errno_bkp = errno;
-        printf("ERR GET CONF %s: %d (%d)\n", channel->uart_name, termios_state, errno);
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("ERR GET CONF %s: %d (%d)\n", channel->uart_name, termios_state, errno);
         close_serial_locator(locator);
         return -errno_bkp;
     }
@@ -218,7 +218,7 @@ int open_serial_locator(micrortps_locator_t* const locator)
     if ((termios_state = tcsetattr(channel->uart_fd, TCSANOW, &uart_config)) < 0)
     {
         int errno_bkp = errno;
-        printf("ERR SET CONF %s (%d)\n", channel->uart_name, errno);
+        MICRORTPS_TRANSPORT_PRINTF_ARGS("ERR SET CONF %s (%d)\n", channel->uart_name, errno);
         close_serial_locator(locator);
         return -errno_bkp;
     }
@@ -247,7 +247,7 @@ int close_serial_locator(micrortps_locator_t* const locator)
 
     if (NULL == locator)
     {
-        printf("# close_serial_locator() -> BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# close_serial_locator() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -255,7 +255,7 @@ int close_serial_locator(micrortps_locator_t* const locator)
 
     if (0 != close(channel->uart_fd))
     {
-        printf("# close_serial_locator() -> close error\n");
+        MICRORTPS_TRANSPORT_PRINTF("# close_serial_locator() -> close error\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -285,7 +285,7 @@ int read_serial(micrortps_locator_t* const locator)
     if (NULL == locator ||
         (!locator->open && 0 > open_serial_locator(locator)))
     {
-        printf("# read_serial() -> BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# read_serial() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -320,7 +320,7 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
 
     if (NULL == out_buffer)
     {
-        printf("# receive_serial() -> BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# receive_serial() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -328,7 +328,7 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
     if (NULL == locator ||
         (!locator->open && 0 > open_serial_locator(locator)))
     {
-        printf("# receive_serial() -> error, serial not open\n");
+        MICRORTPS_TRANSPORT_PRINTF("# receive_serial() -> error, serial not open\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -341,7 +341,7 @@ int receive_serial(octet_t* out_buffer, const size_t buffer_len, const locator_i
 
         if (errsv && EAGAIN != errsv && ETIMEDOUT != errsv)
         {
-//            printf("Read fail %d\n", errsv);
+//            MICRORTPS_TRANSPORT_PRINTF("Read fail %d\n", errsv);
         }
     }
     else
@@ -371,7 +371,7 @@ int write_serial(const void* buffer, const size_t len, micrortps_locator_t* cons
         NULL == locator      ||
         (!locator->open && 0 > open_serial_locator(locator)))
     {
-        printf("# write_serial() -> BAD PARAMETERS!\n");
+        MICRORTPS_TRANSPORT_PRINTF("# write_serial() -> BAD PARAMETERS!\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 
@@ -402,7 +402,7 @@ int send_serial(const header_t* header, const octet_t* in_buffer, const size_t l
     if (NULL == locator      ||
         (!locator->open && 0 > open_serial_locator(locator)))
     {
-        printf("# send_serial() -> error, serial not open\n");
+        MICRORTPS_TRANSPORT_PRINTF("# send_serial() -> error, serial not open\n");
         return MICRORTPS_TRANSPORT_ERROR;
     }
 

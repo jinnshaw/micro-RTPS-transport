@@ -43,7 +43,15 @@ extern "C"
 {
 #endif
 
+#ifndef MICRORTPS_TRANSPORT_LOG
+#define MICRORTPS_TRANSPORT_LOG 0
+#endif
 
+#define MICRORTPS_TRANSPORT_PRINTF(fmt) \
+            do { if (MICRORTPS_TRANSPORT_LOG) fprintf(stdout, fmt); } while (0)
+
+#define MICRORTPS_TRANSPORT_PRINTF_ARGS(fmt, ...) \
+            do { if (MICRORTPS_TRANSPORT_LOG) fprintf(stdout, fmt, __VA_ARGS__); } while (0)
 
 transport_DllAPI void ms_sleep(int milliseconds);
 
